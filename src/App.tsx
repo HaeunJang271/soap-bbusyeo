@@ -24,17 +24,23 @@ function App() {
   const [loginBonusData, setLoginBonusData] = useState<{ bonus: number; consecutiveDays: number } | null>(null)
 
   useEffect(() => {
-    // Check daily login bonus
+    // Check daily login bonus only once
     const loginResult = checkDailyLogin()
-    console.log('Login result:', loginResult)
+    console.log('Login result:', JSON.stringify(loginResult, null, 2))
     if (loginResult.isNewLogin) {
+      console.log('Setting login bonus data:', {
+        bonus: loginResult.bonus,
+        consecutiveDays: loginResult.consecutiveDays
+      })
       setLoginBonusData({
         bonus: loginResult.bonus,
         consecutiveDays: loginResult.consecutiveDays
       })
       setShowLoginBonus(true)
     }
+  }, []) // Run only once on mount
 
+  useEffect(() => {
     // Initialize audio on first user interaction
     const handleFirstInteraction = () => {
       audioManager.initializeOnUserInteraction()
@@ -52,7 +58,7 @@ function App() {
       document.removeEventListener('click', handleFirstInteraction)
       document.removeEventListener('touchstart', handleFirstInteraction)
     }
-  }, [checkDailyLogin, backgroundMusicEnabled])
+  }, [backgroundMusicEnabled])
 
   useEffect(() => {
     // Handle background music

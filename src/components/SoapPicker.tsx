@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useGameStore } from '../store'
 import LoginBonus from './LoginBonus'
 
@@ -14,7 +14,7 @@ const SoapPicker: React.FC = () => {
     setIsPlaying,
     setGameStartTime,
 
-    checkDailyLogin,
+
     spendCoins,
     unlockSoap,
     unlockTool
@@ -22,13 +22,7 @@ const SoapPicker: React.FC = () => {
   
   const [showLoginBonus, setShowLoginBonus] = useState(false)
   
-  // Check daily login on component mount
-  useEffect(() => {
-    const loginResult = checkDailyLogin()
-    if (loginResult.isNewLogin) {
-      setShowLoginBonus(true)
-    }
-  }, [checkDailyLogin])
+
 
   const handleSoapSelect = (soap: any) => {
     if (!soap.unlocked) {

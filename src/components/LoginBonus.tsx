@@ -8,6 +8,13 @@ interface LoginBonusProps {
 
 const LoginBonus: React.FC<LoginBonusProps> = ({ bonus, consecutiveDays, onClose }) => {
   const [show, setShow] = useState(false)
+  
+  console.log('LoginBonus component - Props:', JSON.stringify({ 
+    bonus: bonus, 
+    consecutiveDays: consecutiveDays,
+    bonusType: typeof bonus,
+    consecutiveDaysType: typeof consecutiveDays
+  }, null, 2))
 
   useEffect(() => {
     // Show animation after a short delay

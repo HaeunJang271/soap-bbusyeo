@@ -291,8 +291,17 @@ export const useGameStore = create<GameState & {
         const today = new Date().toDateString()
         const state = get()
         
+        console.log('checkDailyLogin - Current state:', JSON.stringify({
+          lastLoginDate: state.lastLoginDate,
+          consecutiveLoginDays: state.consecutiveLoginDays,
+          today: today
+        }, null, 2))
+        
         // 첫 로그인인 경우 (lastLoginDate가 null)
         if (state.lastLoginDate === null) {
+          console.log('First login detected, giving 50 coins')
+          
+          // 상태를 먼저 업데이트
           set(prev => ({ 
             lastLoginDate: today,
             consecutiveLoginDays: 1,
@@ -300,6 +309,7 @@ export const useGameStore = create<GameState & {
             totalCoinsEarned: prev.totalCoinsEarned + 50
           }))
           
+          // 결과를 즉시 반환
           return {
             bonus: 50,
             consecutiveDays: 1,
