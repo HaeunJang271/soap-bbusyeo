@@ -68,13 +68,13 @@ function App() {
   }, [backgroundMusicEnabled])
 
   useEffect(() => {
-    // Handle background music
-    if (backgroundMusicEnabled) {
+    // Handle background music - 오버레이가 숨겨진 후에만 자동 재생
+    if (backgroundMusicEnabled && !showOverlay) {
       audioManager.playBackgroundMusic()
-    } else {
+    } else if (!backgroundMusicEnabled) {
       audioManager.stopBackgroundMusic()
     }
-  }, [backgroundMusicEnabled])
+  }, [backgroundMusicEnabled, showOverlay])
 
   useEffect(() => {
     // Cleanup audio when component unmounts
@@ -186,16 +186,24 @@ function App() {
               <h1 className="text-3xl font-bold text-white mb-4 drop-shadow-2xl" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>비누뿌셔</h1>
               <p className="text-white mb-8 text-lg drop-shadow-2xl" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>비누를 선택하고 문질러 거품을 만들어보세요!</p>
               <button
-                onClick={() => {
+                onClick={async () => {
                   console.log('Overlay clicked, hiding overlay')
-                  setShowOverlay(false)
                   
-                  // 오버레이 클릭 시 오디오 초기화 및 배경음악 재생
-                  audioManager.initializeOnUserInteraction()
-                  if (backgroundMusicEnabled) {
-                    setTimeout(() => {
-                      audioManager.playBackgroundMusic()
-                    }, 200)
+                  try {
+                    // 오버레이 클릭 시 오디오 초기화 및 배경음악 재생
+                    audioManager.initializeOnUserInteraction()
+                    
+                    // 배경음악이 활성화되어 있으면 재생
+                    if (backgroundMusicEnabled) {
+                      await audioManager.playBackgroundMusic()
+                    }
+                    
+                    // 오버레이 숨기기
+                    setShowOverlay(false)
+                  } catch (error) {
+                    console.error('Failed to start background music:', error)
+                    // 실패해도 오버레이는 숨기기
+                    setShowOverlay(false)
                   }
                 }}
                 className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl font-bold text-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"

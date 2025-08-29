@@ -87,6 +87,14 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     updateProgress(0)
   }, [selectedSoap, updateProgress])
 
+  // Auto-play background music when entering game screen
+  useEffect(() => {
+    const { backgroundMusicEnabled } = useGameStore.getState()
+    if (backgroundMusicEnabled) {
+      audioManager.playBackgroundMusic()
+    }
+  }, [])
+
   // Canvas setup
   useEffect(() => {
     const canvas = canvasRef.current
@@ -221,7 +229,23 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
 
   // Create particles
   const createParticles = useCallback((x: number, y: number, count: number) => {
-    if (!selectedSoap || !isDrawing) return
+    if (!selectedSoap) return
+
+    // 비누 위에서 드래그하고 있는지 확인
+    const canvas = canvasRef.current
+    if (!canvas) return
+    
+    const rect = canvas.getBoundingClientRect()
+    const centerX = rect.width / 2
+    const centerY = rect.height / 2
+    const soapRadius = Math.min(rect.width, rect.height) / 6 // 비누 크기의 절반
+    
+    const distanceFromCenter = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2)
+    
+    // 비누 위에서만 거품 생성
+    if (distanceFromCenter > soapRadius) {
+      return
+    }
 
     console.log('Creating particles:', { x, y, count, soapName: selectedSoap.name })
 
@@ -274,7 +298,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
         console.error('Failed to play scrub sound on particle creation:', error)
       }
     }
-  }, [selectedSoap, soundEnabled, isDrawing])
+  }, [selectedSoap, soundEnabled])
 
 
 
@@ -283,9 +307,6 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
   // Handle drawing
   const handleDraw = useCallback((point: Point, pressure: number) => {
     if (!selectedSoap) return
-
-    // 실제로 드래그 중일 때만 거품 생성
-    if (!isDrawing) return
 
     // Track scrub pattern for pattern-based challenges
     if (lastPoint) {
@@ -350,7 +371,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     // }
     
     setLastPoint(point)
-  }, [selectedSoap, createParticles, updateProgress, onHaptic, soundEnabled, lastPoint, isDrawing])
+  }, [selectedSoap, createParticles, updateProgress, onHaptic, soundEnabled, lastPoint])
 
   // Event handlers
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {

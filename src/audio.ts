@@ -123,29 +123,25 @@ class AudioManager {
     }
   }
 
-  public playBackgroundMusic() {
+  public async playBackgroundMusic(): Promise<void> {
     if (!this.backgroundMusic || !this.isInitialized) return
 
     try {
       // 모바일에서 오디오 컨텍스트 재개
       if (this.audioContext && this.audioContext.state === 'suspended') {
-        this.audioContext.resume()
+        await this.audioContext.resume()
       }
       
       // 모바일에서 오디오 파일 재로드
       this.backgroundMusic.load()
       
       if (this.backgroundMusic.paused) {
-        this.backgroundMusic.play().catch((error) => {
-          console.error('Failed to play background music:', error)
-          // 모바일에서 실패 시 다시 시도
-          setTimeout(() => {
-            this.backgroundMusic?.play().catch(console.error)
-          }, 100)
-        })
+        await this.backgroundMusic.play()
+        console.log('Background music started successfully')
       }
     } catch (error) {
       console.error('Failed to play background music:', error)
+      throw error // 에러를 다시 던져서 호출자가 처리할 수 있도록
     }
   }
 
