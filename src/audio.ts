@@ -25,29 +25,40 @@ class AudioManager {
 
     this.backgroundMusic = new Audio('/sound/DreamBubbles.mp3')
     this.backgroundMusic.loop = true
-    this.backgroundMusic.volume = 0.1
+    this.backgroundMusic.volume = 0.3 // 볼륨 증가 (0.1 -> 0.3)
     this.backgroundMusic.preload = 'auto'
     this.backgroundMusic.load() // 즉시 로드
   }
 
   public initializeOnUserInteraction() {
-    if (this.isInitialized) return
+    console.log('initializeOnUserInteraction called, isInitialized:', this.isInitialized)
+    
+    if (this.isInitialized) {
+      console.log('Audio already initialized, skipping...')
+      return
+    }
 
     try {
+      console.log('Creating AudioContext...')
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
       this.isInitialized = true
-      console.log('Audio initialized successfully')
+      console.log('Audio initialized successfully, context state:', this.audioContext.state)
       
       // 모바일에서 오디오 컨텍스트 재개
       if (this.audioContext.state === 'suspended') {
+        console.log('AudioContext is suspended, resuming...')
         this.audioContext.resume()
       }
       
       // 모바일에서 오디오 파일들 재로드
+      console.log('Preparing audio files...')
       this.prepareAudio()
       
       // 모바일에서 오디오 파일들 미리 로드
+      console.log('Preloading audio files...')
       this.preloadAudio()
+      
+      console.log('Audio initialization completed')
     } catch (error) {
       console.error('Failed to initialize audio:', error)
     }
@@ -124,20 +135,38 @@ class AudioManager {
   }
 
   public async playBackgroundMusic(): Promise<void> {
-    if (!this.backgroundMusic || !this.isInitialized) return
+    console.log('playBackgroundMusic called:', {
+      hasBackgroundMusic: !!this.backgroundMusic,
+      isInitialized: this.isInitialized,
+      audioContextState: this.audioContext?.state,
+      backgroundMusicPaused: this.backgroundMusic?.paused,
+      backgroundMusicVolume: this.backgroundMusic?.volume,
+      backgroundMusicReadyState: this.backgroundMusic?.readyState
+    })
+
+    if (!this.backgroundMusic || !this.isInitialized) {
+      console.log('Cannot play background music: missing audio or not initialized')
+      return
+    }
 
     try {
       // 모바일에서 오디오 컨텍스트 재개
       if (this.audioContext && this.audioContext.state === 'suspended') {
+        console.log('Resuming audio context...')
         await this.audioContext.resume()
+        console.log('Audio context resumed:', this.audioContext.state)
       }
       
       // 모바일에서 오디오 파일 재로드
+      console.log('Loading background music...')
       this.backgroundMusic.load()
       
       if (this.backgroundMusic.paused) {
+        console.log('Playing background music...')
         await this.backgroundMusic.play()
         console.log('Background music started successfully')
+      } else {
+        console.log('Background music is already playing')
       }
     } catch (error) {
       console.error('Failed to play background music:', error)
