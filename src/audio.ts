@@ -31,6 +31,11 @@ class AudioManager {
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
       this.isInitialized = true
       console.log('Audio initialized successfully')
+      
+      // 모바일에서 오디오 컨텍스트 재개
+      if (this.audioContext.state === 'suspended') {
+        this.audioContext.resume()
+      }
     } catch (error) {
       console.error('Failed to initialize audio:', error)
     }

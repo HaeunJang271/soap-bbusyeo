@@ -10,34 +10,40 @@ const ShareModal: React.FC<ShareModalProps> = ({ onClose, score, soapName }) => 
   const shareText = `🧼 비누뿌셔에서 ${soapName || '비누'}를 완성했어요! ${score ? `진행도: ${score}%` : ''} 🎉`
   const shareUrl = window.location.href
 
-  const shareToKakao = () => {
-    if (window.Kakao) {
-      window.Kakao.Link.sendDefault({
-        objectType: 'feed',
-        content: {
-          title: '🧼 비누뿌셔',
-          description: shareText,
-          imageUrl: 'https://via.placeholder.com/300x200/87CEEB/FFFFFF?text=비누뿌셔',
-          link: {
-            mobileWebUrl: shareUrl,
-            webUrl: shareUrl,
-          },
-        },
-        buttons: [
-          {
-            title: '게임하기',
-            link: {
-              mobileWebUrl: shareUrl,
-              webUrl: shareUrl,
-            },
-          },
-        ],
-      })
-    } else {
-      // 카카오 SDK가 없는 경우 URL 복사
-      copyToClipboard(shareUrl)
-    }
-  }
+           const shareToKakao = () => {
+           if (window.Kakao) {
+             try {
+               window.Kakao.Link.sendDefault({
+                 objectType: 'feed',
+                 content: {
+                   title: '🧼 비누뿌셔',
+                   description: shareText,
+                   imageUrl: 'https://via.placeholder.com/300x200/87CEEB/FFFFFF?text=비누뿌셔',
+                   link: {
+                     mobileWebUrl: shareUrl,
+                     webUrl: shareUrl,
+                   },
+                 },
+                 buttons: [
+                   {
+                     title: '게임하기',
+                     link: {
+                       mobileWebUrl: shareUrl,
+                       webUrl: shareUrl,
+                     },
+                   },
+                 ],
+               })
+             } catch (error) {
+               console.error('Kakao share failed:', error)
+               alert('카카오톡 공유에 실패했습니다. 링크를 복사해서 공유해주세요!')
+               copyToClipboard(shareUrl)
+             }
+           } else {
+             // 카카오 SDK가 없는 경우 URL 복사
+             copyToClipboard(shareUrl)
+           }
+         }
 
   const shareToNaver = () => {
     const naverUrl = `https://share.naver.com/web/shareView?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent('🧼 비누뿌셔')}`

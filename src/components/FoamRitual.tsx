@@ -353,6 +353,8 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
 
   // Event handlers
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    e.preventDefault() // 모바일에서 기본 동작 방지
+    
     const rect = canvasRef.current?.getBoundingClientRect()
     if (!rect) return
 
@@ -371,6 +373,8 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!isDrawing) return
+    
+    e.preventDefault() // 모바일에서 기본 동작 방지
 
     const rect = canvasRef.current?.getBoundingClientRect()
     if (!rect) return
@@ -710,9 +714,47 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
         onMouseMove={handlePointerMove}
         onMouseUp={handlePointerUp}
         onMouseLeave={handlePointerUp}
-        onTouchStart={(e) => handlePointerDown(e as any)}
-        onTouchMove={(e) => handlePointerMove(e as any)}
-        onTouchEnd={(e) => handlePointerUp(e as any)}
+        onTouchStart={(e) => {
+          e.preventDefault()
+          const touch = e.touches[0]
+          const rect = canvasRef.current?.getBoundingClientRect()
+          if (!rect) return
+          
+          const point: Point = {
+            x: touch.clientX - rect.left,
+            y: touch.clientY - rect.top,
+            timestamp: Date.now()
+          }
+          
+          setIsDrawing(true)
+          setLastPoint(point)
+          
+          const pressure = selectedTool?.efficiency || 1.0
+          handleDraw(point, pressure)
+        }}
+        onTouchMove={(e) => {
+          e.preventDefault()
+          if (!isDrawing) return
+          
+          const touch = e.touches[0]
+          const rect = canvasRef.current?.getBoundingClientRect()
+          if (!rect) return
+          
+          const point: Point = {
+            x: touch.clientX - rect.left,
+            y: touch.clientY - rect.top,
+            timestamp: Date.now()
+          }
+          
+          const pressure = selectedTool?.efficiency || 1.0
+          handleDraw(point, pressure)
+        }}
+        onTouchEnd={(e) => {
+          e.preventDefault()
+          setIsDrawing(false)
+          setLastPoint(null)
+          audioManager.stopScrub()
+        }}
       />
       
       {/* Offscreen foam canvas */}
