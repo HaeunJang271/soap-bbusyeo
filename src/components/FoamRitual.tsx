@@ -45,17 +45,14 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     coins,
     addCoins,
     soundEnabled,
-    incrementScrubs,
-    addPlayTime,
-    incrementSoapsCompleted,
-    addCompletedSoapType
+
   } = useGameStore()
   
   const [isDrawing, setIsDrawing] = useState(false)
   const [lastPoint, setLastPoint] = useState<Point | null>(null)
   const [particles, setParticles] = useState<Particle[]>([])
   const [fps, setFps] = useState(60)
-  const [lastFrameTime, setLastFrameTime] = useState(0)
+
   const [showCompletion, setShowCompletion] = useState(false)
   const [hasShownCompletion, setHasShownCompletion] = useState(false)
   const [showShare, setShowShare] = useState(false)
@@ -168,7 +165,6 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
               
               // Wobble effect
               newWobble += particle.wobbleSpeed
-              const wobbleOffset = Math.sin(newWobble) * 1.5
               
               // Check for pop
               const lifeRatio = newLife / particle.maxLife
@@ -241,45 +237,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     return () => clearInterval(interval)
   }, [])
 
-  // Get canvas coordinates from event
-  const getCanvasPoint = useCallback((event: React.MouseEvent | React.TouchEvent): Point => {
-    const canvas = canvasRef.current
-    if (!canvas) return { x: 0, y: 0, timestamp: Date.now() }
 
-    const rect = canvas.getBoundingClientRect()
-    const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX
-    const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY
-
-    return {
-      x: clientX - rect.left,
-      y: clientY - rect.top,
-      timestamp: Date.now()
-    }
-  }, [])
-
-  // Draw foam on offscreen canvas
-  const drawFoam = useCallback((point: Point, pressure: number) => {
-    const foamCanvas = foamCanvasRef.current
-    if (!foamCanvas || !selectedSoap) return
-
-    const ctx = foamCanvas.getContext('2d')
-    if (!ctx) return
-
-    const radius = 20 + pressure * 10
-    const gradient = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, radius)
-    
-    // Use soap-specific foam color
-    const foamColor = selectedSoap.foamColor
-    gradient.addColorStop(0, `${foamColor}CC`) // 80% opacity
-    gradient.addColorStop(0.5, `${foamColor}66`) // 40% opacity
-    gradient.addColorStop(1, `${foamColor}00`) // 0% opacity
-
-    ctx.globalCompositeOperation = 'source-over'
-    ctx.fillStyle = gradient
-    ctx.beginPath()
-    ctx.arc(point.x, point.y, radius, 0, Math.PI * 2)
-    ctx.fill()
-  }, [selectedSoap])
 
   // Create particles
   const createParticles = useCallback((x: number, y: number, count: number) => {
@@ -344,7 +302,6 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
       const distance = Math.sqrt(dx * dx + dy * dy)
       
       if (distance > 10) { // Minimum distance to count as a scrub
-        let direction = ''
 
       }
     }
@@ -448,8 +405,6 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     let animationId: number
 
     const render = () => {
-      const currentTime = performance.now()
-      setLastFrameTime(currentTime)
 
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height)

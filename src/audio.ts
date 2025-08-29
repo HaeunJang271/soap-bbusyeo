@@ -1,6 +1,6 @@
 class AudioManager {
   private audioContext: AudioContext | null = null
-  private scrubSource: AudioBufferSourceNode | null = null
+
   private backgroundMusic: HTMLAudioElement | null = null
   private scrubAudio: HTMLAudioElement | null = null
   private popAudio: HTMLAudioElement | null = null
