@@ -26,6 +26,7 @@ function App() {
   useEffect(() => {
     // Check daily login bonus
     const loginResult = checkDailyLogin()
+    console.log('Login result:', loginResult)
     if (loginResult.isNewLogin) {
       setLoginBonusData({
         bonus: loginResult.bonus,
@@ -172,7 +173,10 @@ function App() {
               <h1 className="text-3xl font-bold text-white mb-4 drop-shadow-2xl" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>비누뿌셔</h1>
               <p className="text-white mb-8 text-lg drop-shadow-2xl" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>비누를 선택하고 문질러 거품을 만들어보세요!</p>
               <button
-                onClick={() => setShowOverlay(false)}
+                onClick={() => {
+                  console.log('Overlay clicked, hiding overlay')
+                  setShowOverlay(false)
+                }}
                 className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl font-bold text-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 클릭하여 접속하세요
