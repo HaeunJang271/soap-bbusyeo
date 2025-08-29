@@ -46,9 +46,6 @@ npm run build
 npm run preview
 ```
 
-### 개발 서버
-개발 서버는 `http://localhost:3000`에서 실행됩니다.
-
 ## 🎯 게임 플레이
 
 1. **비누 선택**: 4가지 비누 중 하나를 선택
@@ -120,7 +117,7 @@ track('scrub_complete', { duration: gameTime, progress: 100 })
 
 ## 🚀 배포
 
-### Vercel 배포 (권장)
+### Vercel 배포
 ```bash
 # Vercel CLI 설치
 npm i -g vercel
@@ -145,23 +142,6 @@ npm run build
 - [ ] **M4**: 미션/타이머 + 결과 화면
 - [ ] **M5**: PWA 설치 & Vercel 배포
 
-## 🤝 기여하기
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 라이선스
-
-이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 `LICENSE` 파일을 참조하세요.
-
-## 📞 연락처
-
-프로젝트 링크: [https://github.com/yourusername/soap-bbusyeo](https://github.com/yourusername/soap-bbusyeo)
-
----
-
 **비누뿌셔**로 스트레스 없는 힐링 시간을 보내세요! 🧼✨
+
 
