@@ -51,7 +51,6 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
   const [isDrawing, setIsDrawing] = useState(false)
   const [lastPoint, setLastPoint] = useState<Point | null>(null)
   const [particles, setParticles] = useState<Particle[]>([])
-  const [fps, setFps] = useState(60)
 
   const [showCompletion, setShowCompletion] = useState(false)
   const [hasShownCompletion, setHasShownCompletion] = useState(false)
@@ -115,26 +114,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     return () => window.removeEventListener('resize', resizeCanvas)
   }, [])
 
-  // FPS counter
-  useEffect(() => {
-    let frameCount = 0
-    let lastTime = performance.now()
 
-    const updateFPS = () => {
-      frameCount++
-      const currentTime = performance.now()
-      
-      if (currentTime - lastTime >= 1000) {
-        setFps(Math.round((frameCount * 1000) / (currentTime - lastTime)))
-        frameCount = 0
-        lastTime = currentTime
-      }
-      
-      requestAnimationFrame(updateFPS)
-    }
-
-    updateFPS()
-  }, [])
 
   // Particle animation loop
   useEffect(() => {
@@ -241,7 +221,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
 
   // Create particles
   const createParticles = useCallback((x: number, y: number, count: number) => {
-    if (!selectedSoap) return
+    if (!selectedSoap || !isDrawing) return
 
     console.log('Creating particles:', { x, y, count, soapName: selectedSoap.name })
 
@@ -285,7 +265,16 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     })
 
     setParticles(prev => [...prev, ...newParticles])
-  }, [selectedSoap])
+    
+    // 드래그 시작할 때만 효과음 재생 (연속 재생 유지)
+    if (newParticles.length > 0 && soundEnabled && !audioManager.isScrubPlaying()) {
+      try {
+        audioManager.playScrub()
+      } catch (error) {
+        console.error('Failed to play scrub sound on particle creation:', error)
+      }
+    }
+  }, [selectedSoap, soundEnabled, isDrawing])
 
 
 
@@ -294,6 +283,9 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
   // Handle drawing
   const handleDraw = useCallback((point: Point, pressure: number) => {
     if (!selectedSoap) return
+
+    // 실제로 드래그 중일 때만 거품 생성
+    if (!isDrawing) return
 
     // Track scrub pattern for pattern-based challenges
     if (lastPoint) {
@@ -343,13 +335,22 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     // Haptic feedback
     onHaptic()
     
-    // Audio feedback
-    if (soundEnabled) {
-      audioManager.playScrub()
-    }
+    // Audio feedback - handleDraw에서는 효과음 재생하지 않음 (드래그 시에만 재생)
+    // if (soundEnabled) {
+    //   // 모바일에서 오디오 재생 강화
+    //   try {
+    //     audioManager.playScrub()
+    //   } catch (error) {
+    //     console.error('Failed to play scrub sound:', error)
+    //     // 실패 시 다시 시도
+    //     setTimeout(() => {
+    //       audioManager.playScrub()
+    //     }, 50)
+    //   }
+    // }
     
     setLastPoint(point)
-  }, [selectedSoap, createParticles, updateProgress, onHaptic, soundEnabled, lastPoint])
+  }, [selectedSoap, createParticles, updateProgress, onHaptic, soundEnabled, lastPoint, isDrawing])
 
   // Event handlers
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -369,6 +370,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     
     const pressure = selectedTool?.efficiency || 1.0
     handleDraw(point, pressure)
+    // 마우스 시작 시에는 효과음 재생하지 않음
   }, [handleDraw, selectedTool])
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -387,14 +389,17 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
 
     const pressure = selectedTool?.efficiency || 1.0
     handleDraw(point, pressure)
+    // 드래그 중에는 효과음 재생하지 않음 (거품 생성 시에만 재생)
   }, [isDrawing, handleDraw, selectedTool])
 
   const handlePointerUp = useCallback((event: React.MouseEvent | React.TouchEvent) => {
     event.preventDefault()
+    
+    // 먼저 드래그 상태를 false로 설정
     setIsDrawing(false)
     setLastPoint(null)
     
-    // Stop music
+    // 효과음 정지
     audioManager.stopScrub()
   }, [])
 
@@ -684,24 +689,6 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     }
   }, [selectedSoap, particles])
 
-  // Check for completion - show only once
-  useEffect(() => {
-    if (progress >= 100 && !hasShownCompletion) {
-      try {
-        console.log('Soap completed! Progress:', progress, 'HasShownCompletion:', hasShownCompletion)
-        audioManager.playPop()
-        setShowCompletion(true)
-        setHasShownCompletion(true)
-        
-        // Give bonus coins for completion
-        const bonusCoins = 200 // 100% 달성 보너스 코인
-        addCoins(bonusCoins)
-      } catch (error) {
-        console.error('Error in completion effect:', error)
-      }
-    }
-  }, [progress, hasShownCompletion])
-
 
 
   return (
@@ -716,6 +703,10 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
         onMouseLeave={handlePointerUp}
         onTouchStart={(e) => {
           e.preventDefault()
+          
+          // 모바일에서 터치 시작 시 오디오 초기화
+          audioManager.initializeOnUserInteraction()
+          
           const touch = e.touches[0]
           const rect = canvasRef.current?.getBoundingClientRect()
           if (!rect) return
@@ -731,6 +722,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
           
           const pressure = selectedTool?.efficiency || 1.0
           handleDraw(point, pressure)
+          // 터치 시작 시에는 효과음 재생하지 않음
         }}
         onTouchMove={(e) => {
           e.preventDefault()
@@ -748,11 +740,16 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
           
           const pressure = selectedTool?.efficiency || 1.0
           handleDraw(point, pressure)
+          // 드래그 중에는 효과음 재생하지 않음 (거품 생성 시에만 재생)
         }}
         onTouchEnd={(e) => {
           e.preventDefault()
+          
+          // 먼저 드래그 상태를 false로 설정
           setIsDrawing(false)
           setLastPoint(null)
+          
+          // 효과음 정지
           audioManager.stopScrub()
         }}
       />
@@ -791,12 +788,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
         </div>
       </div>
 
-      {/* FPS Counter */}
-      <div className="absolute top-20 left-4 z-20">
-        <div className="bg-black/20 backdrop-blur-sm rounded px-2 py-1 text-white text-xs">
-          FPS: {fps}
-        </div>
-      </div>
+
 
       {/* Back Button */}
       <button
@@ -806,7 +798,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
           setHasShownCompletion(false)
           updateProgress(0) // 진행도 초기화
         }}
-        className="absolute bottom-4 left-4 z-20 bg-white/20 backdrop-blur-sm rounded-full p-3 text-white hover:bg-white/30 transition-colors"
+        className="absolute bottom-4 left-4 z-50 bg-white/20 backdrop-blur-sm rounded-full p-3 text-white hover:bg-white/30 transition-colors shadow-lg"
       >
         ← 뒤로
       </button>

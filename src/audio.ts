@@ -11,17 +11,23 @@ class AudioManager {
   }
 
   private prepareAudio() {
-    // Preload audio files
+    // Preload audio files with optimized settings
     this.scrubAudio = new Audio('/sound/bogeul.mp3')
     this.scrubAudio.loop = true
     this.scrubAudio.volume = 0.3
+    this.scrubAudio.preload = 'auto'
+    this.scrubAudio.load() // 즉시 로드
 
     this.popAudio = new Audio('/sound/pop.mp3')
     this.popAudio.volume = 0.2
+    this.popAudio.preload = 'auto'
+    this.popAudio.load() // 즉시 로드
 
     this.backgroundMusic = new Audio('/sound/DreamBubbles.mp3')
     this.backgroundMusic.loop = true
     this.backgroundMusic.volume = 0.1
+    this.backgroundMusic.preload = 'auto'
+    this.backgroundMusic.load() // 즉시 로드
   }
 
   public initializeOnUserInteraction() {
@@ -69,19 +75,23 @@ class AudioManager {
         this.audioContext.resume()
       }
       
-      // 모바일에서 오디오 파일 재로드
-      this.scrubAudio.load()
+      // 딜레이 줄이기 위해 load() 호출 최소화
+      if (this.scrubAudio.readyState < 2) {
+        this.scrubAudio.load()
+      }
       
       if (this.scrubAudio.paused) {
+        // 처음 시작할 때만 currentTime = 0
         this.scrubAudio.currentTime = 0
         this.scrubAudio.play().catch((error) => {
           console.error('Failed to play scrub sound:', error)
-          // 모바일에서 실패 시 다시 시도
+          // 모바일에서 실패 시 빠르게 재시도
           setTimeout(() => {
             this.scrubAudio?.play().catch(console.error)
-          }, 100)
+          }, 10)
         })
       }
+      // 이미 재생 중이면 아무것도 하지 않음 (연속 재생 유지)
     } catch (error) {
       console.error('Failed to play scrub sound:', error)
     }
@@ -96,6 +106,10 @@ class AudioManager {
     } catch (error) {
       console.error('Failed to stop scrub sound:', error)
     }
+  }
+
+  public isScrubPlaying(): boolean {
+    return this.scrubAudio ? !this.scrubAudio.paused : false
   }
 
   public playPop() {

@@ -254,14 +254,15 @@ export const useGameStore = create<GameState & {
       toggleBackgroundMusic: () => set(prev => ({ backgroundMusicEnabled: !prev.backgroundMusicEnabled })),
       
       // Economy actions
-      addCoins: (amount) => set(prev => {
+            addCoins: (amount) => set(prev => {
         console.log('Adding coins:', {
           amount,
           currentCoins: prev.coins,
           newCoins: prev.coins + amount,
-          totalEarned: prev.totalCoinsEarned + amount
+          totalEarned: prev.totalCoinsEarned + amount,
+          timestamp: new Date().toISOString()
         })
-        return { 
+        return {
           coins: prev.coins + amount,
           totalCoinsEarned: prev.totalCoinsEarned + amount
         }

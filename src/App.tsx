@@ -189,6 +189,14 @@ function App() {
                 onClick={() => {
                   console.log('Overlay clicked, hiding overlay')
                   setShowOverlay(false)
+                  
+                  // 오버레이 클릭 시 오디오 초기화 및 배경음악 재생
+                  audioManager.initializeOnUserInteraction()
+                  if (backgroundMusicEnabled) {
+                    setTimeout(() => {
+                      audioManager.playBackgroundMusic()
+                    }, 200)
+                  }
                 }}
                 className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl font-bold text-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
