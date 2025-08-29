@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>비누뿌셔</title>
+    <meta name="description" content="비누를 선택하고 문질러 거품을 내는 힐링·ASMR 하이퍼캐주얼 웹게임" />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.png" />
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Kakao SDK -->
+    <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+    <script>
+      // 카카오 SDK 초기화 (실제 앱 키로 교체 필요)
+      if (typeof Kakao !== 'undefined') {
+        Kakao.init('ed784e95b2297633451e8b525273a601');
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
