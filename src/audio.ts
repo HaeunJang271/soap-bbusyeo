@@ -36,6 +36,9 @@ class AudioManager {
       if (this.audioContext.state === 'suspended') {
         this.audioContext.resume()
       }
+      
+      // 모바일에서 오디오 파일들 재로드
+      this.prepareAudio()
     } catch (error) {
       console.error('Failed to initialize audio:', error)
     }
@@ -45,6 +48,11 @@ class AudioManager {
     if (!this.scrubAudio || !this.isInitialized) return
 
     try {
+      // 모바일에서 오디오 컨텍스트 재개
+      if (this.audioContext && this.audioContext.state === 'suspended') {
+        this.audioContext.resume()
+      }
+      
       if (this.scrubAudio.paused) {
         this.scrubAudio.currentTime = 0
         this.scrubAudio.play().catch(console.error)
@@ -80,6 +88,11 @@ class AudioManager {
     if (!this.backgroundMusic || !this.isInitialized) return
 
     try {
+      // 모바일에서 오디오 컨텍스트 재개
+      if (this.audioContext && this.audioContext.state === 'suspended') {
+        this.audioContext.resume()
+      }
+      
       if (this.backgroundMusic.paused) {
         this.backgroundMusic.play().catch(console.error)
       }

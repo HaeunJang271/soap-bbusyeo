@@ -75,7 +75,7 @@ const SoapPicker: React.FC = () => {
 
      return (
      <div className="w-full h-full flex flex-col items-center p-4 overflow-y-auto">
-       <div className="text-center mb-6 mt-4">
+       <div className="text-center mb-6 mt-20">
          <h1 className="text-4xl font-bold text-white mb-2">🧼 비누뿌셔</h1>
          <p className="text-white/80 text-lg">비누를 선택하고 문질러 거품을 만들어보세요!</p>
        </div>
