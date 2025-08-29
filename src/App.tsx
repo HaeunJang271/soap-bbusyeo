@@ -43,10 +43,17 @@ function App() {
   useEffect(() => {
     // Initialize audio on first user interaction
     const handleFirstInteraction = () => {
+      console.log('First user interaction detected')
       audioManager.initializeOnUserInteraction()
-      if (backgroundMusicEnabled) {
-        audioManager.playBackgroundMusic()
-      }
+      
+      // 모바일에서 약간의 지연 후 배경음악 재생
+      setTimeout(() => {
+        if (backgroundMusicEnabled) {
+          console.log('Playing background music')
+          audioManager.playBackgroundMusic()
+        }
+      }, 200)
+      
       document.removeEventListener('click', handleFirstInteraction)
       document.removeEventListener('touchstart', handleFirstInteraction)
     }

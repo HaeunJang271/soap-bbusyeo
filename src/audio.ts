@@ -39,8 +39,24 @@ class AudioManager {
       
       // 모바일에서 오디오 파일들 재로드
       this.prepareAudio()
+      
+      // 모바일에서 오디오 파일들 미리 로드
+      this.preloadAudio()
     } catch (error) {
       console.error('Failed to initialize audio:', error)
+    }
+  }
+  
+  private preloadAudio() {
+    // 모바일에서 오디오 파일들을 미리 로드
+    if (this.scrubAudio) {
+      this.scrubAudio.load()
+    }
+    if (this.popAudio) {
+      this.popAudio.load()
+    }
+    if (this.backgroundMusic) {
+      this.backgroundMusic.load()
     }
   }
 
@@ -53,9 +69,18 @@ class AudioManager {
         this.audioContext.resume()
       }
       
+      // 모바일에서 오디오 파일 재로드
+      this.scrubAudio.load()
+      
       if (this.scrubAudio.paused) {
         this.scrubAudio.currentTime = 0
-        this.scrubAudio.play().catch(console.error)
+        this.scrubAudio.play().catch((error) => {
+          console.error('Failed to play scrub sound:', error)
+          // 모바일에서 실패 시 다시 시도
+          setTimeout(() => {
+            this.scrubAudio?.play().catch(console.error)
+          }, 100)
+        })
       }
     } catch (error) {
       console.error('Failed to play scrub sound:', error)
@@ -93,8 +118,17 @@ class AudioManager {
         this.audioContext.resume()
       }
       
+      // 모바일에서 오디오 파일 재로드
+      this.backgroundMusic.load()
+      
       if (this.backgroundMusic.paused) {
-        this.backgroundMusic.play().catch(console.error)
+        this.backgroundMusic.play().catch((error) => {
+          console.error('Failed to play background music:', error)
+          // 모바일에서 실패 시 다시 시도
+          setTimeout(() => {
+            this.backgroundMusic?.play().catch(console.error)
+          }, 100)
+        })
       }
     } catch (error) {
       console.error('Failed to play background music:', error)
