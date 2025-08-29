@@ -86,6 +86,12 @@ class AudioManager {
         this.audioContext.resume()
       }
       
+      // 상세한 오디오 디버깅 (첫 번째 호출 시에만)
+      if (!this.scrubAudio.hasAttribute('data-debug-done')) {
+        this.debugAudioElement(this.scrubAudio, 'Scrub Sound')
+        this.scrubAudio.setAttribute('data-debug-done', 'true')
+      }
+      
       // 딜레이 줄이기 위해 load() 호출 최소화
       if (this.scrubAudio.readyState < 2) {
         this.scrubAudio.load()
@@ -157,6 +163,9 @@ class AudioManager {
         console.log('Audio context resumed:', this.audioContext.state)
       }
       
+      // 상세한 오디오 디버깅
+      this.debugAudioElement(this.backgroundMusic, 'Background Music')
+      
       // 모바일에서 오디오 파일 재로드
       console.log('Loading background music...')
       this.backgroundMusic.load()
@@ -171,6 +180,55 @@ class AudioManager {
     } catch (error) {
       console.error('Failed to play background music:', error)
       throw error // 에러를 다시 던져서 호출자가 처리할 수 있도록
+    }
+  }
+
+  private debugAudioElement(audio: HTMLAudioElement, name: string) {
+    console.log(`=== ${name} Debug ===`)
+    
+    // 현재 속성 점검
+    console.table({
+      src: audio.currentSrc,
+      paused: audio.paused,
+      muted: audio.muted,
+      volume: audio.volume,
+      readyState: audio.readyState, // 4면 완전 로드
+      networkState: audio.networkState // 1: idle, 2: loading, 3: no source
+    })
+
+    // 코덱 지원 확인
+    const testAudio = document.createElement('audio')
+    console.log('코덱 지원 확인:', {
+      mp3: testAudio.canPlayType('audio/mpeg'),
+      aac: testAudio.canPlayType('audio/aac'),
+      ogg: testAudio.canPlayType('audio/ogg')
+    })
+
+    // 이벤트 리스너 추가 (한 번만)
+    if (!audio.hasAttribute('data-debug-listeners')) {
+      audio.setAttribute('data-debug-listeners', 'true')
+      
+      const events = ['loadstart', 'loadedmetadata', 'canplay', 'canplaythrough', 'play', 'playing', 'pause', 'ended', 'waiting', 'stalled', 'suspend', 'error', 'timeupdate']
+      events.forEach(ev => {
+        audio.addEventListener(ev, () => {
+          console.log(`[AUDIO ${name}]`, ev, {
+            readyState: audio.readyState,
+            paused: audio.paused,
+            currentTime: audio.currentTime,
+            volume: audio.volume,
+            muted: audio.muted
+          })
+        })
+      })
+    }
+
+    // Web Audio 상태 확인
+    if (this.audioContext) {
+      console.log('Web Audio 상태:', {
+        contextState: this.audioContext.state,
+        sampleRate: this.audioContext.sampleRate,
+        destinationMaxChannelCount: this.audioContext.destination.maxChannelCount
+      })
     }
   }
 
@@ -211,3 +269,46 @@ class AudioManager {
 }
 
 export const audioManager = new AudioManager()
+
+// 전역 디버깅 함수 (콘솔에서 직접 호출 가능)
+export const debugAllAudio = () => {
+  console.log('=== 전체 오디오 디버깅 ===')
+  
+  // 모든 audio 요소 찾기
+  const audioElements = document.querySelectorAll('audio')
+  console.log('발견된 audio 요소 개수:', audioElements.length)
+  
+  audioElements.forEach((el, index) => {
+    console.log(`--- Audio Element ${index + 1} ---`)
+    console.table({
+      src: el.currentSrc,
+      paused: el.paused,
+      muted: el.muted,
+      volume: el.volume,
+      readyState: el.readyState,
+      networkState: el.networkState
+    })
+  })
+  
+  // 코덱 지원 확인
+  const testAudio = document.createElement('audio')
+  console.log('브라우저 코덱 지원:', {
+    mp3: testAudio.canPlayType('audio/mpeg'),
+    aac: testAudio.canPlayType('audio/aac'),
+    ogg: testAudio.canPlayType('audio/ogg'),
+    wav: testAudio.canPlayType('audio/wav')
+  })
+  
+  // Web Audio API 지원 확인
+  const AC = window.AudioContext || (window as any).webkitAudioContext
+  if (AC) {
+    const ctx = new AC()
+    console.log('Web Audio API 상태:', {
+      contextState: ctx.state,
+      sampleRate: ctx.sampleRate
+    })
+    ctx.close()
+  } else {
+    console.log('Web Audio API 미지원')
+  }
+}
