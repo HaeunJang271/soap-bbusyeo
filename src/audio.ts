@@ -5,9 +5,58 @@ class AudioManager {
   private scrubAudio: HTMLAudioElement | null = null
   // private popAudio: HTMLAudioElement | null = null
   private isInitialized = false
+  private wasBackgroundMusicPlaying = false // BGM이 재생 중이었는지 추적
 
   constructor() {
     this.prepareAudio()
+    this.setupVisibilityListeners()
+  }
+
+  private setupVisibilityListeners() {
+    // 페이지가 숨겨지거나 백그라운드로 갈 때 BGM 정지
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        console.log('Page hidden, stopping background music')
+        // BGM이 재생 중이었는지 저장
+        this.wasBackgroundMusicPlaying = this.isPlayingBackgroundMusic
+        this.stopBackgroundMusic()
+      } else {
+        console.log('Page visible again')
+        // 페이지가 다시 보이게 되면 이전에 재생 중이었다면 BGM 재시작
+        if (this.wasBackgroundMusicPlaying && this.isInitialized) {
+          console.log('Restarting background music after page became visible')
+          this.playBackgroundMusic().catch(console.error)
+        }
+      }
+    }
+
+    // 페이지가 완전히 종료될 때 BGM 정지
+    const handlePageHide = () => {
+      console.log('Page hiding, stopping background music')
+      this.stopBackgroundMusic()
+    }
+
+    // 브라우저 탭이 닫히거나 새로고침될 때 BGM 정지
+    const handleBeforeUnload = () => {
+      console.log('Page unloading, stopping background music')
+      this.stopBackgroundMusic()
+    }
+
+    // 이벤트 리스너 등록
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('pagehide', handlePageHide)
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    // PWA 관련 이벤트 (모바일에서 앱이 백그라운드로 갈 때)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'APP_BACKGROUND') {
+          console.log('PWA backgrounded, stopping background music')
+          this.wasBackgroundMusicPlaying = this.isPlayingBackgroundMusic
+          this.stopBackgroundMusic()
+        }
+      })
+    }
   }
 
   private prepareAudio() {
