@@ -25,6 +25,14 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     }
   }
 
+  const handleSoundToggle = () => {
+    toggleSound()
+    // 효과음이 꺼지면 현재 재생 중인 효과음도 정지
+    if (soundEnabled) {
+      audioManager.stopScrub()
+    }
+  }
+
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
       <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6 text-white max-w-md mx-auto relative">
@@ -41,7 +49,7 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
           <div className="flex items-center justify-between">
             <span className="text-lg">🔊 효과음</span>
             <button
-              onClick={toggleSound}
+              onClick={handleSoundToggle}
               className={`w-12 h-6 rounded-full transition-colors ${
                 soundEnabled ? 'bg-blue-500' : 'bg-gray-400'
               }`}

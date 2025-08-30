@@ -13,6 +13,7 @@ function App() {
   const { 
     isPlaying, 
     backgroundMusicEnabled,
+    hapticEnabled,
     checkDailyLogin 
   } = useGameStore()
 
@@ -108,7 +109,11 @@ function App() {
       {/* Main Content */}
       <div className="relative z-10 w-full h-full">
         {isPlaying ? (
-          <FoamRitual onHaptic={() => {}} />
+          <FoamRitual onHaptic={() => {
+          if (hapticEnabled && 'vibrate' in navigator) {
+            navigator.vibrate(50) // 50ms 진동
+          }
+        }} />
         ) : (
           <SoapPicker />
         )}

@@ -258,6 +258,7 @@ class AudioManager {
     try {
       this.backgroundMusic.pause()
       this.backgroundMusic.currentTime = 0
+      this.isPlayingBackgroundMusic = false // 플래그 리셋 추가
     } catch (error) {
       console.error('Failed to stop background music:', error)
     }
