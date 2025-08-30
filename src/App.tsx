@@ -110,8 +110,23 @@ function App() {
       <div className="relative z-10 w-full h-full">
         {isPlaying ? (
           <FoamRitual onHaptic={() => {
-          if (hapticEnabled && 'vibrate' in navigator) {
-            navigator.vibrate(50) // 50ms 진동
+          if (hapticEnabled) {
+            // 진동 API 지원 확인 및 실행
+            if ('vibrate' in navigator) {
+              try {
+                navigator.vibrate(50) // 50ms 진동
+              } catch (error) {
+                console.log('Vibration failed:', error)
+              }
+            } else if ('vibrate' in window) {
+              try {
+                (window as any).vibrate(50)
+              } catch (error) {
+                console.log('Window vibration failed:', error)
+              }
+            } else {
+              console.log('Vibration not supported on this device')
+            }
           }
         }} />
         ) : (

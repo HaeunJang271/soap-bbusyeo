@@ -814,6 +814,8 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
       {/* Back Button */}
       <button
         onClick={() => {
+          // 효과음 정지
+          audioManager.stopScrub()
           setIsPlaying(false)
           setShowCompletion(false)
           setHasShownCompletion(false)
@@ -837,6 +839,8 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => {
+                  // 효과음 정지
+                  audioManager.stopScrub()
                   setIsPlaying(false)
                   setShowCompletion(false)
                   setHasShownCompletion(false)
