@@ -140,6 +140,8 @@ class AudioManager {
     }
   }
 
+  private isPlayingBackgroundMusic = false
+
   public async playBackgroundMusic(): Promise<void> {
     console.log('playBackgroundMusic called:', {
       hasBackgroundMusic: !!this.backgroundMusic,
@@ -147,7 +149,8 @@ class AudioManager {
       audioContextState: this.audioContext?.state,
       backgroundMusicPaused: this.backgroundMusic?.paused,
       backgroundMusicVolume: this.backgroundMusic?.volume,
-      backgroundMusicReadyState: this.backgroundMusic?.readyState
+      backgroundMusicReadyState: this.backgroundMusic?.readyState,
+      isAlreadyPlaying: this.isPlayingBackgroundMusic
     })
 
     if (!this.backgroundMusic || !this.isInitialized) {
@@ -155,7 +158,15 @@ class AudioManager {
       return
     }
 
+    // 이미 재생 중이면 중복 호출 방지
+    if (this.isPlayingBackgroundMusic) {
+      console.log('Background music is already playing, skipping...')
+      return
+    }
+
     try {
+      this.isPlayingBackgroundMusic = true
+      
       // 모바일에서 오디오 컨텍스트 재개
       if (this.audioContext && this.audioContext.state === 'suspended') {
         console.log('Resuming audio context...')
@@ -163,22 +174,29 @@ class AudioManager {
         console.log('Audio context resumed:', this.audioContext.state)
       }
       
-      // 상세한 오디오 디버깅
-      this.debugAudioElement(this.backgroundMusic, 'Background Music')
+      // 상세한 오디오 디버깅 (첫 번째 호출 시에만)
+      if (!this.backgroundMusic.hasAttribute('data-debug-done')) {
+        this.debugAudioElement(this.backgroundMusic, 'Background Music')
+        this.backgroundMusic.setAttribute('data-debug-done', 'true')
+      }
+      
+      // 이미 재생 중이면 아무것도 하지 않음
+      if (!this.backgroundMusic.paused) {
+        console.log('Background music is already playing')
+        return
+      }
       
       // 모바일에서 오디오 파일 재로드
       console.log('Loading background music...')
       this.backgroundMusic.load()
       
-      if (this.backgroundMusic.paused) {
-        console.log('Playing background music...')
-        await this.backgroundMusic.play()
-        console.log('Background music started successfully')
-      } else {
-        console.log('Background music is already playing')
-      }
+      console.log('Playing background music...')
+      await this.backgroundMusic.play()
+      console.log('Background music started successfully')
+      
     } catch (error) {
       console.error('Failed to play background music:', error)
+      this.isPlayingBackgroundMusic = false
       throw error // 에러를 다시 던져서 호출자가 처리할 수 있도록
     }
   }

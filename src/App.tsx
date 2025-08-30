@@ -46,13 +46,7 @@ function App() {
       console.log('First user interaction detected')
       audioManager.initializeOnUserInteraction()
       
-      // 모바일에서 약간의 지연 후 배경음악 재생
-      setTimeout(() => {
-        if (backgroundMusicEnabled) {
-          console.log('Playing background music')
-          audioManager.playBackgroundMusic()
-        }
-      }, 200)
+      // 배경음악 재생은 오버레이에서만 처리하므로 여기서는 제거
       
       document.removeEventListener('click', handleFirstInteraction)
       document.removeEventListener('touchstart', handleFirstInteraction)
@@ -65,12 +59,13 @@ function App() {
       document.removeEventListener('click', handleFirstInteraction)
       document.removeEventListener('touchstart', handleFirstInteraction)
     }
-  }, [backgroundMusicEnabled])
+  }, [])
 
   useEffect(() => {
     // Handle background music - 오버레이가 숨겨진 후에만 자동 재생
     if (backgroundMusicEnabled && !showOverlay) {
-      audioManager.playBackgroundMusic()
+      // 배경음악 재생은 오버레이에서만 처리하므로 여기서는 제거
+      // audioManager.playBackgroundMusic()
     } else if (!backgroundMusicEnabled) {
       audioManager.stopBackgroundMusic()
     }
