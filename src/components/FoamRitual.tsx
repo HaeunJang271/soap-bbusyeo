@@ -45,7 +45,10 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     coins,
     addCoins,
     soundEnabled,
-
+    incrementScrubs,
+    incrementSoapsCompleted,
+    addCompletedSoapType,
+    addPlayTime
   } = useGameStore()
   
   const [isDrawing, setIsDrawing] = useState(false)
@@ -55,6 +58,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
   const [showCompletion, setShowCompletion] = useState(false)
   const [hasShownCompletion, setHasShownCompletion] = useState(false)
   const [showShare, setShowShare] = useState(false)
+  const [gameStartTime, setGameStartTime] = useState<number | null>(null)
 
   // Update progress ref when progress changes
   useEffect(() => {
@@ -70,6 +74,10 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
         setShowCompletion(true)
         setHasShownCompletion(true)
         
+        // Update statistics
+        incrementSoapsCompleted()
+        addCompletedSoapType(selectedSoap.name)
+        
         // Give bonus coins for completion
         const bonusCoins = 200 // 100% 달성 보너스 코인
         addCoins(bonusCoins)
@@ -77,7 +85,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
         console.error('Error in completion effect:', error)
       }
     }
-  }, [progress, hasShownCompletion])
+  }, [progress, hasShownCompletion, incrementSoapsCompleted, addCompletedSoapType, selectedSoap.name, addCoins])
 
   // Reset completion state when soap changes
   useEffect(() => {
@@ -87,13 +95,26 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     updateProgress(0)
   }, [selectedSoap, updateProgress])
 
-  // Auto-play background music when entering game screen
+  // Auto-play background music when entering game screen and start game timer
   useEffect(() => {
     const { backgroundMusicEnabled } = useGameStore.getState()
     if (backgroundMusicEnabled) {
       audioManager.playBackgroundMusic()
     }
-  }, [])
+    
+    // Start game timer
+    setGameStartTime(Date.now())
+    
+    // Cleanup function to add play time when component unmounts
+    return () => {
+      if (gameStartTime) {
+        const playTime = Math.floor((Date.now() - gameStartTime) / 1000)
+        if (playTime > 0) {
+          addPlayTime(playTime)
+        }
+      }
+    }
+  }, [gameStartTime, addPlayTime])
 
   // Canvas setup
   useEffect(() => {
@@ -352,6 +373,9 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     }
     
     updateProgress(newProgress)
+    
+    // Increment scrub count
+    incrementScrubs()
     
     // Haptic feedback
     onHaptic()
@@ -816,6 +840,15 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
         onClick={() => {
           // 효과음 정지
           audioManager.stopScrub()
+          
+          // Add play time
+          if (gameStartTime) {
+            const playTime = Math.floor((Date.now() - gameStartTime) / 1000)
+            if (playTime > 0) {
+              addPlayTime(playTime)
+            }
+          }
+          
           setIsPlaying(false)
           setShowCompletion(false)
           setHasShownCompletion(false)
@@ -841,6 +874,15 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
                 onClick={() => {
                   // 효과음 정지
                   audioManager.stopScrub()
+                  
+                  // Add play time
+                  if (gameStartTime) {
+                    const playTime = Math.floor((Date.now() - gameStartTime) / 1000)
+                    if (playTime > 0) {
+                      addPlayTime(playTime)
+                    }
+                  }
+                  
                   setIsPlaying(false)
                   setShowCompletion(false)
                   setHasShownCompletion(false)
