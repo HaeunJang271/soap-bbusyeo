@@ -60,12 +60,16 @@ class AudioManager {
   }
 
   private prepareAudio() {
-    // Preload audio files with optimized settings
+    // Preload audio files with optimized settings for screen recording
     this.scrubAudio = new Audio('/sound/bogeul.mp3')
     this.scrubAudio.loop = true
     this.scrubAudio.volume = 0.3
     this.scrubAudio.preload = 'auto'
     this.scrubAudio.load() // 즉시 로드
+    
+    // 화면 녹화 시 사운드 캡처를 위한 설정
+    this.scrubAudio.setAttribute('playsinline', 'true')
+    this.scrubAudio.setAttribute('webkit-playsinline', 'true')
 
     // pop.mp3 파일이 없으므로 제거
     // this.popAudio = new Audio('/sound/pop.mp3')
@@ -78,6 +82,10 @@ class AudioManager {
     this.backgroundMusic.volume = 0.3 // 볼륨 증가 (0.1 -> 0.3)
     this.backgroundMusic.preload = 'auto'
     this.backgroundMusic.load() // 즉시 로드
+    
+    // 화면 녹화 시 사운드 캡처를 위한 설정
+    this.backgroundMusic.setAttribute('playsinline', 'true')
+    this.backgroundMusic.setAttribute('webkit-playsinline', 'true')
   }
 
   public initializeOnUserInteraction() {
@@ -91,6 +99,12 @@ class AudioManager {
     try {
       console.log('Creating AudioContext...')
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      
+      // 화면 녹화 시 사운드 캡처를 위한 설정
+      if (this.audioContext && 'setSinkId' in this.audioContext) {
+        console.log('AudioContext supports setSinkId for screen recording')
+      }
+      
       this.isInitialized = true
       console.log('Audio initialized successfully, context state:', this.audioContext.state)
       

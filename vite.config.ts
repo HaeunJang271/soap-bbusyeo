@@ -21,6 +21,10 @@ export default defineConfig({
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
+        permissions: [
+          'microphone',
+          'camera'
+        ],
         icons: [
           {
             src: 'icon.svg',
