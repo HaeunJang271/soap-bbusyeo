@@ -78,12 +78,6 @@
 - **라이브 사이트**: https://soap-bbusyeo.vercel.app
 - **GitHub**: https://github.com/HaeunJang271/soap-bbusyeo
 
-## 📝 라이선스
-
-MIT License
-
----
-
 **비누뿌셔**로 스트레스를 날려보세요! 🧼✨
 
 

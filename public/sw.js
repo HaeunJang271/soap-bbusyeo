@@ -1,10 +1,13 @@
 // Service Worker for SoapBbusyeo PWA
-const CACHE_NAME = 'soap-bbusyeo-v1'
+const CACHE_NAME = 'soap-bbusyeo-v2' // 버전 업데이트
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
-  '/icon.svg'
+  '/icon.svg',
+  '/icon-192.svg',
+  '/icon-512.svg',
+  '/apple-touch-icon.svg'
 ]
 
 // Install event - cache resources
