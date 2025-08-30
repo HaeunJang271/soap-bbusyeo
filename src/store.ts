@@ -194,6 +194,7 @@ export const useGameStore = create<GameState & {
   toggleSound: () => void
   toggleHaptic: () => void
   toggleBackgroundMusic: () => void
+  toggleLowPerformanceMode: () => void
   
   // Economy actions
   addCoins: (amount: number) => void

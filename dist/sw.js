@@ -1,1 +1,71 @@
-if(!self.define){let e,i={};const s=(s,n)=>(s=new URL(s+".js",n).href,i[s]||new Promise(i=>{if("document"in self){const e=document.createElement("script");e.src=s,e.onload=i,document.head.appendChild(e)}else e=s,importScripts(s),i()}).then(()=>{let e=i[s];if(!e)throw new Error(`Module ${s} didn’t register its module`);return e}));self.define=(n,r)=>{const o=e||("document"in self?document.currentScript.src:"")||location.href;if(i[o])return;let t={};const c=e=>s(e,o),d={module:{uri:o},exports:t,require:c};i[o]=Promise.all(n.map(e=>d[e]||c(e))).then(e=>(r(...e),t))}}define(["./workbox-5ffe50d4"],function(e){"use strict";self.skipWaiting(),e.clientsClaim(),e.precacheAndRoute([{url:"assets/index-CK090vwa.js",revision:null},{url:"assets/index-CND2IHRw.css",revision:null},{url:"icon.svg",revision:"5ade730577d0d474cc1de9a77878b6f5"},{url:"index.html",revision:"82210ee3208c77f60be5d4e591c83381"},{url:"registerSW.js",revision:"1872c500de691dce40960bb85481de07"},{url:"sound/DreamBubbles.mp3",revision:"1b2ace392c066c716526f630af56b5c7"},{url:"icon.svg",revision:"5ade730577d0d474cc1de9a77878b6f5"},{url:"manifest.webmanifest",revision:"e97e90450c98de47c2be4d5057854957"}],{}),e.cleanupOutdatedCaches(),e.registerRoute(new e.NavigationRoute(e.createHandlerBoundToURL("index.html")))});
+// Service Worker for SoapBbusyeo PWA
+const CACHE_NAME = 'soap-bbusyeo-v3' // 버전 업데이트
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/manifest.webmanifest',
+  '/icon.svg'
+]
+
+// Install event - cache resources
+self.addEventListener('install', (event) => {
+  console.log('Service Worker installing...')
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        console.log('Opened cache')
+        return cache.addAll(urlsToCache)
+      })
+  )
+})
+
+// Fetch event - serve from cache if available
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request)
+      .then((response) => {
+        // Return cached version or fetch from network
+        return response || fetch(event.request)
+      })
+  )
+})
+
+// Activate event - clean up old caches
+self.addEventListener('activate', (event) => {
+  console.log('Service Worker activating...')
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('Deleting old cache:', cacheName)
+            return caches.delete(cacheName)
+          }
+        })
+      )
+    })
+  )
+})
+
+// Handle app visibility changes
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+})
+
+// PWA specific events for background detection
+self.addEventListener('fetch', (event) => {
+  // Check if the app is going to background
+  if (event.request.mode === 'navigate') {
+    // Notify main script about potential backgrounding
+    self.clients.matchAll().then((clients) => {
+      clients.forEach((client) => {
+        client.postMessage({
+          type: 'APP_BACKGROUND',
+          timestamp: Date.now()
+        })
+      })
+    })
+  }
+})
