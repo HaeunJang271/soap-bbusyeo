@@ -15,8 +15,8 @@ export default defineConfig({
         name: '비누뿌셔',
         short_name: '비누뿌셔',
         description: '비누를 선택하고 문질러 거품을 내는 힐링·ASMR 하이퍼캐주얼 웹게임',
-        theme_color: '#ffffff',
-        background_color: '#ffffff',
+        theme_color: '#E3F2FD',
+        background_color: '#E3F2FD',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
@@ -27,6 +27,24 @@ export default defineConfig({
             sizes: 'any',
             type: 'image/svg+xml',
             purpose: 'any maskable'
+          },
+          {
+            src: 'icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: 'icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: 'apple-touch-icon.png',
+            sizes: '180x180',
+            type: 'image/png',
+            purpose: 'any'
           }
         ]
       }
