@@ -114,13 +114,14 @@ function App() {
             // 진동 API 지원 확인 및 실행
             if ('vibrate' in navigator) {
               try {
-                navigator.vibrate(50) // 50ms 진동
+                // 다양한 진동 패턴: 짧은 진동으로 반응성 향상
+                navigator.vibrate(30) // 30ms 진동 (더 빠른 반응)
               } catch (error) {
                 console.log('Vibration failed:', error)
               }
             } else if ('vibrate' in window) {
               try {
-                (window as any).vibrate(50)
+                (window as any).vibrate(30)
               } catch (error) {
                 console.log('Window vibration failed:', error)
               }

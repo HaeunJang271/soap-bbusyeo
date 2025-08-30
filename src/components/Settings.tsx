@@ -16,6 +16,9 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     toggleBackgroundMusic 
   } = useGameStore()
 
+  // 진동 지원 여부 확인
+  const isVibrationSupported = typeof navigator !== 'undefined' && 'vibrate' in navigator
+
   const handleBackgroundMusicToggle = () => {
     toggleBackgroundMusic()
     if (backgroundMusicEnabled) {
@@ -30,6 +33,24 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     // 효과음이 꺼지면 현재 재생 중인 효과음도 정지
     if (soundEnabled) {
       audioManager.stopScrub()
+    }
+  }
+
+  const handleHapticToggle = () => {
+    toggleHaptic()
+    // 진동이 켜지면 테스트 진동 실행
+    if (!hapticEnabled) {
+      // 진동 지원 확인 및 테스트
+      if ('vibrate' in navigator) {
+        try {
+          // 테스트 진동 패턴: 짧은 진동 3번
+          navigator.vibrate([50, 100, 50, 100, 50])
+        } catch (error) {
+          console.log('Vibration test failed:', error)
+        }
+      } else {
+        console.log('Vibration not supported on this device')
+      }
     }
   }
 
@@ -75,15 +96,21 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-lg">📳 진동</span>
+            <div className="flex flex-col">
+              <span className="text-lg">📳 진동</span>
+              {!isVibrationSupported && (
+                <span className="text-xs text-yellow-300 opacity-80">이 기기에서는 지원되지 않습니다</span>
+              )}
+            </div>
             <button
-              onClick={toggleHaptic}
+              onClick={handleHapticToggle}
+              disabled={!isVibrationSupported}
               className={`w-12 h-6 rounded-full transition-colors ${
-                hapticEnabled ? 'bg-blue-500' : 'bg-gray-400'
-              }`}
+                hapticEnabled && isVibrationSupported ? 'bg-blue-500' : 'bg-gray-400'
+              } ${!isVibrationSupported ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <div className={`w-4 h-4 bg-white rounded-full transition-transform ${
-                hapticEnabled ? 'transform translate-x-6' : 'transform translate-x-1'
+                hapticEnabled && isVibrationSupported ? 'transform translate-x-6' : 'transform translate-x-1'
               }`} />
             </button>
           </div>
