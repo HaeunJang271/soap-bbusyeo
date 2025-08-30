@@ -18,6 +18,13 @@
     <!-- 화면 녹화 시 사운드 캡처를 위한 설정 -->
     <meta name="allow-audio-capture" content="true" />
     <meta name="allow-screen-capture" content="true" />
+    <meta name="allow-presentation" content="true" />
+    <meta name="allow-microphone" content="true" />
+    <meta name="allow-camera" content="true" />
+    
+    <!-- PWA 화면 녹화 지원 -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     
     <!-- Kakao SDK -->
     <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
@@ -25,6 +32,18 @@
       // 카카오 SDK 초기화 (실제 앱 키로 교체 필요)
       if (typeof Kakao !== 'undefined') {
         Kakao.init('ed784e95b2297633451e8b525273a601');
+      }
+      
+      // 화면 녹화 시 사운드 캡처를 위한 설정
+      if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+        console.log('Screen recording with audio capture supported');
+      }
+      
+      // 오디오 컨텍스트 초기화 (화면 녹화 지원)
+      if (window.AudioContext || window.webkitAudioContext) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioContextClass();
+        console.log('AudioContext created for screen recording support');
       }
     </script>
   </head>

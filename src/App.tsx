@@ -209,6 +209,9 @@ function App() {
                     // 오버레이 클릭 시 오디오 초기화 및 배경음악 재생
                     audioManager.initializeOnUserInteraction()
                     
+                    // 화면 녹화 시 사운드 캡처 지원 활성화
+                    audioManager.enableScreenRecordingAudio()
+                    
                     // 배경음악이 활성화되어 있으면 재생
                     if (backgroundMusicEnabled) {
                       await audioManager.playBackgroundMusic()

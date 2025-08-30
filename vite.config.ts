@@ -23,7 +23,9 @@ export default defineConfig({
         start_url: '/',
         permissions: [
           'microphone',
-          'camera'
+          'camera',
+          'display-capture',
+          'audio-capture'
         ],
         icons: [
           {

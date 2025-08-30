@@ -70,6 +70,8 @@ class AudioManager {
     // 화면 녹화 시 사운드 캡처를 위한 설정
     this.scrubAudio.setAttribute('playsinline', 'true')
     this.scrubAudio.setAttribute('webkit-playsinline', 'true')
+    this.scrubAudio.setAttribute('crossorigin', 'anonymous')
+    this.scrubAudio.setAttribute('allow', 'autoplay; encrypted-media')
 
     // pop.mp3 파일이 없으므로 제거
     // this.popAudio = new Audio('/sound/pop.mp3')
@@ -86,6 +88,8 @@ class AudioManager {
     // 화면 녹화 시 사운드 캡처를 위한 설정
     this.backgroundMusic.setAttribute('playsinline', 'true')
     this.backgroundMusic.setAttribute('webkit-playsinline', 'true')
+    this.backgroundMusic.setAttribute('crossorigin', 'anonymous')
+    this.backgroundMusic.setAttribute('allow', 'autoplay; encrypted-media')
   }
 
   public initializeOnUserInteraction() {
@@ -349,6 +353,28 @@ class AudioManager {
     }
     
     this.isInitialized = false
+  }
+
+  // 화면 녹화 시 사운드 캡처를 위한 전용 함수
+  public enableScreenRecordingAudio() {
+    console.log('Enabling screen recording audio capture...')
+    
+    // 모든 오디오 요소에 화면 녹화 지원 속성 추가
+    const audioElements = document.querySelectorAll('audio')
+    audioElements.forEach(audio => {
+      audio.setAttribute('playsinline', 'true')
+      audio.setAttribute('webkit-playsinline', 'true')
+      audio.setAttribute('crossorigin', 'anonymous')
+      audio.setAttribute('allow', 'autoplay; encrypted-media')
+      console.log('Audio element configured for screen recording:', audio.src)
+    })
+    
+    // Web Audio API를 통한 화면 녹화 지원
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      this.audioContext.resume().then(() => {
+        console.log('AudioContext resumed for screen recording')
+      })
+    }
   }
 }
 
