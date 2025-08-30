@@ -167,10 +167,10 @@ const SoapPicker: React.FC = () => {
                 }`}
               >
                 {/* Tool Icon */}
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-center mb-3 relative">
                   <div className="text-3xl">{tool.icon}</div>
                   {!tool.unlocked && (
-                    <div className="text-yellow-500 text-sm">🔒</div>
+                    <div className="absolute right-0 text-yellow-500 text-sm">🔒</div>
                   )}
                 </div>
                 
