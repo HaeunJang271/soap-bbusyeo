@@ -3,7 +3,7 @@ class AudioManager {
 
   private backgroundMusic: HTMLAudioElement | null = null
   private scrubAudio: HTMLAudioElement | null = null
-  private popAudio: HTMLAudioElement | null = null
+  // private popAudio: HTMLAudioElement | null = null
   private isInitialized = false
 
   constructor() {
