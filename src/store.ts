@@ -280,9 +280,18 @@ export const useGameStore = create<GameState & {
 
       
       // Statistics actions
-      incrementSoapsCompleted: () => set(prev => ({ totalSoapsCompleted: prev.totalSoapsCompleted + 1 })),
-      addPlayTime: (seconds) => set(prev => ({ totalPlayTime: prev.totalPlayTime + seconds })),
-      incrementScrubs: () => set(prev => ({ totalScrubs: prev.totalScrubs + 1 })),
+          incrementSoapsCompleted: () => set(prev => {
+      console.log('incrementSoapsCompleted called, current:', prev.totalSoapsCompleted, 'new:', prev.totalSoapsCompleted + 1)
+      return { totalSoapsCompleted: prev.totalSoapsCompleted + 1 }
+    }),
+    addPlayTime: (seconds) => set(prev => {
+      console.log('addPlayTime called, adding:', seconds, 'current:', prev.totalPlayTime, 'new:', prev.totalPlayTime + seconds)
+      return { totalPlayTime: prev.totalPlayTime + seconds }
+    }),
+    incrementScrubs: () => set(prev => {
+      console.log('incrementScrubs called, current:', prev.totalScrubs, 'new:', prev.totalScrubs + 1)
+      return { totalScrubs: prev.totalScrubs + 1 }
+    }),
       addCompletedSoapType: (soapType) => set(prev => ({ 
         completedSoapTypes: prev.completedSoapTypes.includes(soapType) 
           ? prev.completedSoapTypes 

@@ -75,6 +75,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
         setHasShownCompletion(true)
         
         // Update statistics
+        console.log('Completing soap:', selectedSoap.name)
         incrementSoapsCompleted()
         addCompletedSoapType(selectedSoap.name)
         
@@ -103,18 +104,19 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     }
     
     // Start game timer
-    setGameStartTime(Date.now())
+    const startTime = Date.now()
+    setGameStartTime(startTime)
+    console.log('Game started at:', startTime)
     
     // Cleanup function to add play time when component unmounts
     return () => {
-      if (gameStartTime) {
-        const playTime = Math.floor((Date.now() - gameStartTime) / 1000)
-        if (playTime > 0) {
-          addPlayTime(playTime)
-        }
+      const playTime = Math.floor((Date.now() - startTime) / 1000)
+      console.log('Game ended, play time:', playTime, 'seconds')
+      if (playTime > 0) {
+        addPlayTime(playTime)
       }
     }
-  }, [gameStartTime, addPlayTime])
+  }, [addPlayTime]) // gameStartTime 제거 (무한 루프 방지)
 
   // Canvas setup
   useEffect(() => {
@@ -375,6 +377,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     updateProgress(newProgress)
     
     // Increment scrub count
+    console.log('Scrubbing soap:', selectedSoap.name)
     incrementScrubs()
     
     // Haptic feedback
@@ -844,6 +847,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
           // Add play time
           if (gameStartTime) {
             const playTime = Math.floor((Date.now() - gameStartTime) / 1000)
+            console.log('Adding play time (back button):', playTime, 'seconds')
             if (playTime > 0) {
               addPlayTime(playTime)
             }
@@ -878,6 +882,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
                   // Add play time
                   if (gameStartTime) {
                     const playTime = Math.floor((Date.now() - gameStartTime) / 1000)
+                    console.log('Adding play time (home button):', playTime, 'seconds')
                     if (playTime > 0) {
                       addPlayTime(playTime)
                     }
