@@ -18,10 +18,11 @@ class AudioManager {
     this.scrubAudio.preload = 'auto'
     this.scrubAudio.load() // 즉시 로드
 
-    this.popAudio = new Audio('/sound/pop.mp3')
-    this.popAudio.volume = 0.2
-    this.popAudio.preload = 'auto'
-    this.popAudio.load() // 즉시 로드
+    // pop.mp3 파일이 없으므로 제거
+    // this.popAudio = new Audio('/sound/pop.mp3')
+    // this.popAudio.volume = 0.2
+    // this.popAudio.preload = 'auto'
+    // this.popAudio.load() // 즉시 로드
 
     this.backgroundMusic = new Audio('/sound/DreamBubbles.mp3')
     this.backgroundMusic.loop = true
@@ -69,9 +70,9 @@ class AudioManager {
     if (this.scrubAudio) {
       this.scrubAudio.load()
     }
-    if (this.popAudio) {
-      this.popAudio.load()
-    }
+    // if (this.popAudio) {
+    //   this.popAudio.load()
+    // }
     if (this.backgroundMusic) {
       this.backgroundMusic.load()
     }
@@ -130,14 +131,15 @@ class AudioManager {
   }
 
   public playPop() {
-    if (!this.popAudio || !this.isInitialized) return
+    // pop.mp3 파일이 없으므로 제거
+    // if (!this.popAudio || !this.isInitialized) return
 
-    try {
-      this.popAudio.currentTime = 0
-      this.popAudio.play().catch(console.error)
-    } catch (error) {
-      console.error('Failed to play pop sound:', error)
-    }
+    // try {
+    //   this.popAudio.currentTime = 0
+    //   this.popAudio.play().catch(console.error)
+    // } catch (error) {
+    //   console.error('Failed to play pop sound:', error)
+    // }
   }
 
   private isPlayingBackgroundMusic = false
