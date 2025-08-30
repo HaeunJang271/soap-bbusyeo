@@ -11,9 +11,11 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     soundEnabled, 
     hapticEnabled, 
     backgroundMusicEnabled,
+    lowPerformanceMode,
     toggleSound, 
     toggleHaptic, 
-    toggleBackgroundMusic 
+    toggleBackgroundMusic,
+    toggleLowPerformanceMode
   } = useGameStore()
 
   // 진동 지원 여부 확인
@@ -111,6 +113,23 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
             >
               <div className={`w-4 h-4 bg-white rounded-full transition-transform ${
                 hapticEnabled && isVibrationSupported ? 'transform translate-x-6' : 'transform translate-x-1'
+              }`} />
+            </button>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-lg">⚡ 저사양 모드</span>
+              <span className="text-xs text-blue-300 opacity-80">성능 향상을 위해 파티클을 줄입니다</span>
+            </div>
+            <button
+              onClick={toggleLowPerformanceMode}
+              className={`w-12 h-6 rounded-full transition-colors ${
+                lowPerformanceMode ? 'bg-blue-500' : 'bg-gray-400'
+              }`}
+            >
+              <div className={`w-4 h-4 bg-white rounded-full transition-transform ${
+                lowPerformanceMode ? 'transform translate-x-6' : 'transform translate-x-1'
               }`} />
             </button>
           </div>

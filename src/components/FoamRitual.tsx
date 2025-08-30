@@ -45,6 +45,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     coins,
     addCoins,
     soundEnabled,
+    lowPerformanceMode,
     incrementScrubs,
     incrementSoapsCompleted,
     addCompletedSoapType,
@@ -244,9 +245,9 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
       })
     }
 
-    const interval = setInterval(animateParticles, 32) // Slower animation for stability
+    const interval = setInterval(animateParticles, lowPerformanceMode ? 50 : 32) // 저사양 모드에서는 애니메이션 속도 감소
     return () => clearInterval(interval)
-  }, [])
+  }, [lowPerformanceMode])
 
 
 
@@ -261,7 +262,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     const rect = canvas.getBoundingClientRect()
     const centerX = rect.width / 2
     const centerY = rect.height / 2
-    const soapRadius = Math.min(rect.width, rect.height) / 6 // 비누 크기의 절반
+    const soapRadius = Math.min(rect.width, rect.height) / 4 // 비누 반지름을 더 크게 (6 → 4)
     
     const distanceFromCenter = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2)
     
@@ -342,8 +343,9 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
       }
     }
 
-    // Create fewer particles for stability
-    const particleCount = Math.max(1, Math.floor(selectedSoap.particles * pressure * 0.5)) // Ensure at least 1 particle
+    // Create particles based on performance mode
+    const baseMultiplier = lowPerformanceMode ? 0.3 : 1.5 // 저사양 모드에서는 파티클 80% 감소
+    const particleCount = Math.max(1, Math.floor(selectedSoap.particles * pressure * baseMultiplier))
     
     console.log('handleDraw:', {
       soapName: selectedSoap.name,
@@ -604,68 +606,77 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
             })
           }
           
-          // Draw enhanced bubble with density effects
-          
-          // Simple density calculation
-          let density = 0
-          const nearbyCount = particles.filter(p => {
-            const distance = Math.sqrt((p.x - particle.x) ** 2 + (p.y - particle.y) ** 2)
-            return distance < 30 && p !== particle
-          }).length
-          density = Math.min(nearbyCount / 5, 1)
-          
-          // Outer glow effect (like the image)
-          if (density > 0.2) {
-            const glowSize = particle.size * (1 + density * 1.5)
-            const glowAlpha = Math.floor(alpha * 255 * density * 0.6).toString(16).padStart(2, '0')
-            ctx.fillStyle = `${particle.color}${glowAlpha}`
+          if (lowPerformanceMode) {
+            // 저사양 모드: 간단한 원형 파티클만 그리기
+            ctx.fillStyle = `${particle.color}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`
             ctx.beginPath()
-            ctx.arc(particle.x, particle.y, glowSize, 0, Math.PI * 2)
+            ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2)
             ctx.fill()
+          } else {
+            // 고사양 모드: 복잡한 버블 효과
+            // Draw enhanced bubble with density effects
+            
+            // Simple density calculation
+            let density = 0
+            const nearbyCount = particles.filter(p => {
+              const distance = Math.sqrt((p.x - particle.x) ** 2 + (p.y - particle.y) ** 2)
+              return distance < 30 && p !== particle
+            }).length
+            density = Math.min(nearbyCount / 5, 1)
+            
+            // Outer glow effect (like the image)
+            if (density > 0.2) {
+              const glowSize = particle.size * (1 + density * 1.5)
+              const glowAlpha = Math.floor(alpha * 255 * density * 0.6).toString(16).padStart(2, '0')
+              ctx.fillStyle = `${particle.color}${glowAlpha}`
+              ctx.beginPath()
+              ctx.arc(particle.x, particle.y, glowSize, 0, Math.PI * 2)
+              ctx.fill()
+            }
+            
+            // Base bubble with gradient (like the soft pink cloud)
+            const gradient = ctx.createRadialGradient(
+              particle.x - particle.size * 0.3, 
+              particle.y - particle.size * 0.3, 
+              0,
+              particle.x, 
+              particle.y, 
+              particle.size
+            )
+            gradient.addColorStop(0, `${particle.color}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`)
+            gradient.addColorStop(0.6, `${particle.color}${Math.floor(alpha * 255 * 0.8).toString(16).padStart(2, '0')}`)
+            gradient.addColorStop(1, `${particle.color}${Math.floor(alpha * 255 * 0.2).toString(16).padStart(2, '0')}`)
+            
+            ctx.fillStyle = gradient
+            ctx.beginPath()
+            ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2)
+            ctx.fill()
+            
+            // Multiple highlights for 3D effect (like the sparkles)
+            const highlightSize1 = particle.size * 0.8
+            const highlightSize2 = particle.size * 0.4
+            const highlightAlpha1 = Math.floor(alpha * 255 * 0.9).toString(16).padStart(2, '0')
+            const highlightAlpha2 = Math.floor(alpha * 255 * 0.6).toString(16).padStart(2, '0')
+            
+            // Primary highlight
+            ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha1})`
+            ctx.beginPath()
+            ctx.arc(particle.x - particle.size * 0.3, particle.y - particle.size * 0.3, highlightSize1, 0, Math.PI * 2)
+            ctx.fill()
+            
+            // Secondary highlight
+            ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha2})`
+            ctx.beginPath()
+            ctx.arc(particle.x - particle.size * 0.2, particle.y - particle.size * 0.2, highlightSize2, 0, Math.PI * 2)
+            ctx.fill()
+            
+            // Soft outline for definition
+            ctx.strokeStyle = `rgba(255, 255, 255, ${Math.floor(alpha * 255 * 0.4).toString(16).padStart(2, '0')})`
+            ctx.lineWidth = 1
+            ctx.beginPath()
+            ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2)
+            ctx.stroke()
           }
-          
-          // Base bubble with gradient (like the soft pink cloud)
-          const gradient = ctx.createRadialGradient(
-            particle.x - particle.size * 0.3, 
-            particle.y - particle.size * 0.3, 
-            0,
-            particle.x, 
-            particle.y, 
-            particle.size
-          )
-          gradient.addColorStop(0, `${particle.color}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`)
-          gradient.addColorStop(0.6, `${particle.color}${Math.floor(alpha * 255 * 0.8).toString(16).padStart(2, '0')}`)
-          gradient.addColorStop(1, `${particle.color}${Math.floor(alpha * 255 * 0.2).toString(16).padStart(2, '0')}`)
-          
-          ctx.fillStyle = gradient
-          ctx.beginPath()
-          ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2)
-          ctx.fill()
-          
-          // Multiple highlights for 3D effect (like the sparkles)
-          const highlightSize1 = particle.size * 0.8
-          const highlightSize2 = particle.size * 0.4
-          const highlightAlpha1 = Math.floor(alpha * 255 * 0.9).toString(16).padStart(2, '0')
-          const highlightAlpha2 = Math.floor(alpha * 255 * 0.6).toString(16).padStart(2, '0')
-          
-          // Primary highlight
-          ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha1})`
-          ctx.beginPath()
-          ctx.arc(particle.x - particle.size * 0.3, particle.y - particle.size * 0.3, highlightSize1, 0, Math.PI * 2)
-          ctx.fill()
-          
-          // Secondary highlight
-          ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha2})`
-          ctx.beginPath()
-          ctx.arc(particle.x - particle.size * 0.2, particle.y - particle.size * 0.2, highlightSize2, 0, Math.PI * 2)
-          ctx.fill()
-          
-          // Soft outline for definition
-          ctx.strokeStyle = `rgba(255, 255, 255, ${Math.floor(alpha * 255 * 0.4).toString(16).padStart(2, '0')})`
-          ctx.lineWidth = 1
-          ctx.beginPath()
-          ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2)
-          ctx.stroke()
         } else {
           // Draw regular particles
           ctx.fillStyle = `${particle.color}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`

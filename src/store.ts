@@ -40,6 +40,7 @@ export interface GameState {
   soundEnabled: boolean
   hapticEnabled: boolean
   backgroundMusicEnabled: boolean
+  lowPerformanceMode: boolean
   
   // Economy
   coins: number
@@ -227,6 +228,7 @@ export const useGameStore = create<GameState & {
       soundEnabled: true,
       hapticEnabled: true,
       backgroundMusicEnabled: true,
+      lowPerformanceMode: false,
       
       coins: 0,
       totalCoinsEarned: 0,
@@ -252,6 +254,7 @@ export const useGameStore = create<GameState & {
       toggleSound: () => set(prev => ({ soundEnabled: !prev.soundEnabled })),
       toggleHaptic: () => set(prev => ({ hapticEnabled: !prev.hapticEnabled })),
       toggleBackgroundMusic: () => set(prev => ({ backgroundMusicEnabled: !prev.backgroundMusicEnabled })),
+      toggleLowPerformanceMode: () => set(prev => ({ lowPerformanceMode: !prev.lowPerformanceMode })),
       
       // Economy actions
             addCoins: (amount) => set(prev => {
