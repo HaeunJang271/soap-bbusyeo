@@ -23,31 +23,20 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'icon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
-            purpose: 'any maskable'
-          },
-          {
-            src: 'icon-192.svg',
+            src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'any maskable'
           },
           {
-            src: 'icon-512.svg',
+            src: 'pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'any maskable'
-          },
-          {
-            src: 'apple-touch-icon.svg',
-            sizes: '180x180',
-            type: 'image/svg+xml',
-            purpose: 'any'
           }
         ]
-      }
+      },
+      includeAssets: ['icon.svg', 'apple-touch-icon.svg']
     })
   ],
   server: {
