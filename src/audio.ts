@@ -1,3 +1,5 @@
+import { useGameStore } from './store'
+
 class AudioManager {
   private audioContext: AudioContext | null = null
 
@@ -257,6 +259,13 @@ class AudioManager {
 
   public playPopAndWow() {
     if (!this.popAndWowAudio || !this.isInitialized) return
+
+    // 효과음 설정 확인
+    const { soundEffectsEnabled } = useGameStore.getState()
+    if (!soundEffectsEnabled) {
+      console.log('Sound effects disabled, skipping PopAndWow sound')
+      return
+    }
 
     try {
       // 모바일에서 오디오 컨텍스트 재개
