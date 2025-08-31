@@ -30,9 +30,19 @@
     <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
     <script>
       // 카카오 SDK 초기화 (실제 앱 키로 교체 필요)
-      if (typeof Kakao !== 'undefined') {
-        Kakao.init('ed784e95b2297633451e8b525273a601');
-      }
+      window.addEventListener('load', function() {
+        if (typeof Kakao !== 'undefined') {
+          try {
+            Kakao.init('ed784e95b2297633451e8b525273a601');
+            console.log('Kakao SDK initialized successfully');
+            console.log('Kakao.isInitialized:', Kakao.isInitialized());
+          } catch (error) {
+            console.error('Failed to initialize Kakao SDK:', error);
+          }
+        } else {
+          console.error('Kakao SDK not available');
+        }
+      });
       
       // 화면 녹화 시 사운드 캡처를 위한 설정
       if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {

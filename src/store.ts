@@ -554,11 +554,17 @@ export const useGameStore = create<GameState & {
         // 카카오 로그인 관련 액션들
         loginWithKakao: async () => {
           try {
+            console.log('Starting Kakao login process...')
+            console.log('window.Kakao exists:', !!window.Kakao)
+            
             if (!window.Kakao) {
               console.error('Kakao SDK not loaded')
               return { success: false, error: 'Kakao SDK not loaded' }
             }
 
+            // 카카오 SDK 초기화 상태 확인
+            console.log('Kakao.isInitialized:', (window.Kakao as any).isInitialized())
+            
             const response = await new Promise<any>((resolve, reject) => {
               (window.Kakao as any).Auth.login({
                 success: (authObj: any) => {
