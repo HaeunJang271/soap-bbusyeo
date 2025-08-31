@@ -6,6 +6,7 @@ class AudioManager {
   // private popAudio: HTMLAudioElement | null = null
   private isInitialized = false
   private wasBackgroundMusicPlaying = false // BGM이 재생 중이었는지 추적
+  private fadeOutInterval: number | null = null // 페이드아웃 인터벌 ID
 
   constructor() {
     this.prepareAudio()
@@ -149,6 +150,12 @@ class AudioManager {
     if (!this.scrubAudio || !this.isInitialized) return
 
     try {
+      // 기존 페이드아웃 인터벌이 있다면 정리하고 즉시 재생
+      if (this.fadeOutInterval) {
+        clearInterval(this.fadeOutInterval)
+        this.fadeOutInterval = null
+      }
+
       // 모바일에서 오디오 컨텍스트 재개
       if (this.audioContext && this.audioContext.state === 'suspended') {
         this.audioContext.resume()
@@ -164,6 +171,9 @@ class AudioManager {
       if (this.scrubAudio.readyState < 2) {
         this.scrubAudio.load()
       }
+      
+      // 볼륨을 원래대로 복원 (페이드아웃 중이었다면)
+      this.scrubAudio.volume = 0.3
       
       if (this.scrubAudio.paused) {
         // 처음 시작할 때만 currentTime = 0
@@ -186,8 +196,40 @@ class AudioManager {
     if (!this.scrubAudio) return
 
     try {
-      this.scrubAudio.pause()
-      this.scrubAudio.currentTime = 0
+      // 기존 페이드아웃 인터벌이 있다면 정리
+      if (this.fadeOutInterval) {
+        clearInterval(this.fadeOutInterval)
+        this.fadeOutInterval = null
+      }
+
+      // 페이드아웃 효과 적용
+      const fadeOutDuration = 500 // 0.5초 동안 페이드아웃
+      const fadeSteps = 20 // 20단계로 나누어 페이드아웃
+      const fadeStepDuration = fadeOutDuration / fadeSteps
+      const initialVolume = this.scrubAudio.volume
+      const volumeStep = initialVolume / fadeSteps
+
+      let currentStep = 0
+
+      this.fadeOutInterval = window.setInterval(() => {
+        currentStep++
+        
+        if (currentStep >= fadeSteps) {
+          // 페이드아웃 완료 - 소리 정지
+          this.scrubAudio!.pause()
+          this.scrubAudio!.currentTime = 0
+          this.scrubAudio!.volume = initialVolume // 볼륨 원래대로 복원
+          
+          // 인터벌 정리
+          if (this.fadeOutInterval) {
+            clearInterval(this.fadeOutInterval)
+            this.fadeOutInterval = null
+          }
+        } else {
+          // 볼륨 점진적 감소
+          this.scrubAudio!.volume = Math.max(0, initialVolume - (volumeStep * currentStep))
+        }
+      }, fadeStepDuration)
     } catch (error) {
       console.error('Failed to stop scrub sound:', error)
     }
@@ -346,6 +388,12 @@ class AudioManager {
   public cleanup() {
     this.stopScrub()
     this.stopBackgroundMusic()
+    
+    // 페이드아웃 인터벌 정리
+    if (this.fadeOutInterval) {
+      clearInterval(this.fadeOutInterval)
+      this.fadeOutInterval = null
+    }
     
     if (this.audioContext) {
       this.audioContext.close()
