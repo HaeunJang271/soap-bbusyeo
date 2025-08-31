@@ -35,7 +35,6 @@ interface Particle {
 const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const foamCanvasRef = useRef<HTMLCanvasElement>(null)
-  const progressRef = useRef(0)
   const { 
     selectedSoap, 
     selectedTool, 
@@ -61,10 +60,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
   const [showShare, setShowShare] = useState(false)
   const [gameStartTime, setGameStartTime] = useState<number | null>(null)
 
-  // Update progress ref when progress changes
-  useEffect(() => {
-    progressRef.current = progress
-  }, [progress])
+
 
   // Check for completion - show only once
   useEffect(() => {
@@ -356,22 +352,27 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     })
     createParticles(point.x, point.y, particleCount)
     
-    // Update progress - faster progression with tool efficiency consideration
-    const baseIncrement = selectedSoap.particles * 0.03 // 기본 증가량을 3배로 증가
+    // Update progress - 더 부드럽고 반응성 좋은 진행도 시스템
+    const baseIncrement = selectedSoap.particles * 0.08 // 기본 증가량을 8배로 증가 (더 빠른 진행)
     const toolMultiplier = Math.min(pressure, 2.0) // 도구 효율성을 2배로 제한
-    const progressIncrement = baseIncrement * toolMultiplier
-    const newProgress = Math.min(100, progressRef.current + progressIncrement)
     
-    // Debug progress increment
-    if (Math.random() < 0.1) { // 10% 확률로 로그 출력 (너무 많은 로그 방지)
+    // 진행도가 높을수록 더 빠르게 증가하도록 조정
+    const progressMultiplier = 1 + (progress / 100) * 0.5 // 진행도 100%일 때 1.5배 빠름
+    
+    const progressIncrement = baseIncrement * toolMultiplier * progressMultiplier
+    const newProgress = Math.min(100, progress + progressIncrement)
+    
+    // Debug progress increment (로그 빈도 줄임)
+    if (Math.random() < 0.05) { // 5% 확률로 로그 출력
       console.log('Progress increment:', {
         soapName: selectedSoap.name,
         particles: selectedSoap.particles,
         pressure,
         baseIncrement,
         toolMultiplier,
+        progressMultiplier,
         progressIncrement,
-        currentProgress: progressRef.current,
+        currentProgress: progress,
         newProgress
       })
     }
@@ -385,22 +386,8 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     // Haptic feedback
     onHaptic()
     
-    // Audio feedback - handleDraw에서는 효과음 재생하지 않음 (드래그 시에만 재생)
-    // if (soundEnabled) {
-    //   // 모바일에서 오디오 재생 강화
-    //   try {
-    //     audioManager.playScrub()
-    //   } catch (error) {
-    //     console.error('Failed to play scrub sound:', error)
-    //     // 실패 시 다시 시도
-    //     setTimeout(() => {
-    //       audioManager.playScrub()
-    //     }, 50)
-    //   }
-    // }
-    
     setLastPoint(point)
-  }, [selectedSoap, createParticles, updateProgress, onHaptic, soundEnabled, lastPoint])
+  }, [selectedSoap, createParticles, updateProgress, onHaptic, soundEnabled, lastPoint, progress])
 
   // Event handlers
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -438,7 +425,11 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     }
 
     const pressure = selectedTool?.efficiency || 1.0
-    handleDraw(point, pressure)
+    
+    // requestAnimationFrame을 사용하여 더 부드러운 업데이트
+    requestAnimationFrame(() => {
+      handleDraw(point, pressure)
+    })
     // 드래그 중에는 효과음 재생하지 않음 (거품 생성 시에만 재생)
   }, [isDrawing, handleDraw, selectedTool])
 
@@ -798,7 +789,11 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
           }
           
           const pressure = selectedTool?.efficiency || 1.0
-          handleDraw(point, pressure)
+          
+          // requestAnimationFrame을 사용하여 더 부드러운 업데이트
+          requestAnimationFrame(() => {
+            handleDraw(point, pressure)
+          })
           // 드래그 중에는 효과음 재생하지 않음 (거품 생성 시에만 재생)
         }}
         onTouchEnd={(e) => {
@@ -825,7 +820,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
           <div className="text-sm font-medium">진행도: {Math.round(Math.min(progress, 100))}%</div>
           <div className="w-32 h-2 bg-white/30 rounded-full mt-1">
             <div 
-              className="h-full bg-white rounded-full transition-all duration-[10ms]"
+              className="h-full bg-white rounded-full transition-all duration-[50ms] ease-out"
               style={{ width: `${Math.min(progress, 100)}%` }}
             />
           </div>
