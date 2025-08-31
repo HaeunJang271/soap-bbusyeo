@@ -576,8 +576,11 @@ export const useGameStore = create<GameState & {
               return { success: false, error: 'Kakao SDK not initialized' }
             }
 
-            // 팝업 차단 확인 (브라우저 환경에서만)
-            if (typeof window !== 'undefined') {
+            // 모바일 환경 확인
+            const isMobile = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+            
+            // 팝업 차단 확인 (데스크톱 환경에서만)
+            if (typeof window !== 'undefined' && !isMobile) {
               const popupTest = window.open('', '_blank', 'width=1,height=1')
               if (!popupTest) {
                 alert('팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.')
@@ -596,7 +599,11 @@ export const useGameStore = create<GameState & {
                   console.error('Kakao Auth login failed:', err)
                   // 팝업 차단 오류인지 확인
                   if (err.error === 'popup_closed_by_user' || err.error === 'popup_blocked') {
-                    alert('로그인 팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.')
+                    if (isMobile) {
+                      alert('모바일에서는 카카오톡 앱을 통해 로그인해주세요.')
+                    } else {
+                      alert('로그인 팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.')
+                    }
                   } else {
                     alert('로그인에 실패했습니다. 다시 시도해주세요.')
                   }
@@ -604,8 +611,8 @@ export const useGameStore = create<GameState & {
                 }
               })
               
-              // 팝업이 차단되었는지 확인 (브라우저 환경에서만)
-              if (typeof window !== 'undefined' && (!loginWindow || loginWindow.closed)) {
+              // 팝업이 차단되었는지 확인 (데스크톱 환경에서만)
+              if (typeof window !== 'undefined' && !isMobile && (!loginWindow || loginWindow.closed)) {
                 setTimeout(() => {
                   if (!loginWindow || loginWindow.closed) {
                     alert('로그인 팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.')

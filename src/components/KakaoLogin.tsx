@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useGameStore } from '../store'
 
 interface KakaoLoginProps {
@@ -6,9 +7,16 @@ interface KakaoLoginProps {
 
 const KakaoLogin = ({ onClose }: KakaoLoginProps) => {
   const { isLoggedIn, userProfile, loginWithKakao, logout } = useGameStore()
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleKakaoLogin = async () => {
+    if (isLoading) return // 중복 클릭 방지
+    
+    setIsLoading(true)
     try {
+      // 모바일 환경 확인
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      
       // 카카오 SDK 확인
       if (typeof window.Kakao === 'undefined') {
         alert('카카오 SDK를 불러올 수 없습니다. 페이지를 새로고침해주세요.')
@@ -19,7 +27,9 @@ const KakaoLogin = ({ onClose }: KakaoLoginProps) => {
       if (result.success) {
         console.log('카카오 로그인 성공!')
         // Mark that welcome login has been shown
-        localStorage.setItem('hasShownWelcomeLogin', 'true')
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('hasShownWelcomeLogin', 'true')
+        }
         onClose()
       } else {
         console.error('카카오 로그인 실패:', result.error)
@@ -31,7 +41,11 @@ const KakaoLogin = ({ onClose }: KakaoLoginProps) => {
         } else if (result.error === 'Kakao SDK not initialized') {
           errorMessage = '카카오 SDK 초기화에 실패했습니다. 페이지를 새로고침해주세요.'
         } else if (result.error === 'Popup blocked') {
-          errorMessage = '팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.'
+          if (isMobile) {
+            errorMessage = '모바일에서는 카카오톡 앱을 통해 로그인해주세요.'
+          } else {
+            errorMessage = '팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.'
+          }
         } else if (result.error.includes('failed to parse error')) {
           errorMessage = '네트워크 오류가 발생했습니다. 인터넷 연결을 확인하고 다시 시도해주세요.'
         }
@@ -41,6 +55,8 @@ const KakaoLogin = ({ onClose }: KakaoLoginProps) => {
     } catch (error) {
       console.error('카카오 로그인 오류:', error)
       alert('로그인 중 오류가 발생했습니다. 다시 시도해주세요.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -92,10 +108,24 @@ const KakaoLogin = ({ onClose }: KakaoLoginProps) => {
               </p>
                              <button
                  onClick={handleKakaoLogin}
-                 className="w-full bg-yellow-400 text-black py-3 px-6 rounded-2xl font-semibold hover:bg-yellow-500 transition-colors flex items-center justify-center"
+                 disabled={isLoading}
+                 className={`w-full py-3 px-6 rounded-2xl font-semibold transition-colors flex items-center justify-center ${
+                   isLoading 
+                     ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                     : 'bg-yellow-400 text-black hover:bg-yellow-500'
+                 }`}
                >
-                 <span className="text-xl mr-2">💬</span>
-                 카카오로 로그인
+                 {isLoading ? (
+                   <>
+                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black mr-2"></div>
+                     로그인 중...
+                   </>
+                 ) : (
+                   <>
+                     <span className="text-xl mr-2">💬</span>
+                     카카오로 로그인
+                   </>
+                 )}
                </button>
             </div>
           )}
