@@ -320,6 +320,7 @@ export const useGameStore = create<GameState & {
   loginWithKakao: () => Promise<{ success: boolean; userInfo?: any; error?: any }>
   logout: () => void
   checkKakaoLoginStatus: () => boolean
+  updateNickname: (newNickname: string) => void
 }>()(
   persist(
     (set, get) => ({
@@ -563,6 +564,11 @@ export const useGameStore = create<GameState & {
               return { success: false, error: 'Kakao SDK not loaded' }
             }
 
+            // 카카오 SDK 초기화 확인
+            if (!(window.Kakao as any).isInitialized()) {
+              return { success: false, error: 'Kakao SDK not initialized' }
+            }
+
             // 카카오 로그인 요청
             await new Promise<any>((resolve, reject) => {
               (window.Kakao as any).Auth.login({
@@ -570,6 +576,7 @@ export const useGameStore = create<GameState & {
                   resolve(authObj)
                 },
                 fail: (err: any) => {
+                  console.error('Kakao Auth login failed:', err)
                   reject(err)
                 }
               })
@@ -583,25 +590,65 @@ export const useGameStore = create<GameState & {
                   resolve(res)
                 },
                 fail: (err: any) => {
+                  console.error('Kakao API request failed:', err)
                   reject(err)
                 }
               })
             })
 
-            // 상태 업데이트
-            set(() => ({
-              isLoggedIn: true,
-              userProfile: {
-                id: userInfo.id.toString(),
-                nickname: userInfo.properties?.nickname || userInfo.kakao_account?.profile?.nickname || '사용자',
-                profileImage: userInfo.properties?.profile_image || userInfo.kakao_account?.profile?.profile_image_url || null,
-                email: userInfo.kakao_account?.email || null
+            // 상태 업데이트 - 기존 닉네임 유지 (localStorage에서 직접 확인)
+            set(() => {
+              // localStorage에서 저장된 사용자 프로필 확인 (별도 키로 저장)
+              let existingNickname = localStorage.getItem('user-nickname')
+              
+              console.log('🔧 localStorage user-nickname:', existingNickname)
+              
+              if (!existingNickname) {
+                // 기존 방식으로도 확인
+                const savedData = localStorage.getItem('soap-game-storage')
+                console.log('🔧 localStorage savedData:', savedData)
+                
+                if (savedData) {
+                  try {
+                    const parsedData = JSON.parse(savedData)
+                    console.log('🔧 parsedData:', parsedData)
+                    
+                    if (parsedData.state && parsedData.state.userProfile && parsedData.state.userProfile.nickname) {
+                      existingNickname = parsedData.state.userProfile.nickname
+                      console.log('🔧 Found nickname in state:', existingNickname)
+                    } else if (parsedData.userProfile && parsedData.userProfile.nickname) {
+                      existingNickname = parsedData.userProfile.nickname
+                      console.log('🔧 Found nickname in root:', existingNickname)
+                    } else {
+                      console.log('🔧 No nickname found in localStorage')
+                    }
+                  } catch (error) {
+                    console.error('Failed to parse localStorage data:', error)
+                  }
+                }
               }
-            }))
+              
+              const kakaoNickname = userInfo.properties?.nickname || userInfo.kakao_account?.profile?.nickname || '사용자'
+              
+              console.log('🔧 loginWithKakao - existingNickname from localStorage:', existingNickname)
+              console.log('🔧 loginWithKakao - kakaoNickname:', kakaoNickname)
+              console.log('🔧 loginWithKakao - final nickname:', existingNickname || kakaoNickname)
+              
+              return {
+                isLoggedIn: true,
+                userProfile: {
+                  id: userInfo.id.toString(),
+                  nickname: existingNickname || kakaoNickname, // 기존 닉네임이 있으면 유지
+                  profileImage: userInfo.properties?.profile_image || userInfo.kakao_account?.profile?.profile_image_url || null,
+                  email: userInfo.kakao_account?.email || null
+                }
+              }
+            })
 
             return { success: true, userInfo }
           } catch (error) {
-            return { success: false, error }
+            console.error('loginWithKakao error:', error)
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
           }
         },
 
@@ -623,12 +670,36 @@ export const useGameStore = create<GameState & {
         },
 
         updateNickname: (newNickname: string) => {
-          set((state) => ({
-            userProfile: state.userProfile ? {
+          console.log('🔧 updateNickname called with:', newNickname)
+          set((state) => {
+            console.log('🔧 Current userProfile:', state.userProfile)
+            const updatedProfile = state.userProfile ? {
               ...state.userProfile,
               nickname: newNickname
             } : null
-          }))
+            console.log('🔧 Updated userProfile:', updatedProfile)
+            
+            // localStorage에 즉시 저장 (별도 키로도 저장)
+            localStorage.setItem('user-nickname', newNickname)
+            console.log('🔧 Saved nickname to user-nickname key:', newNickname)
+            
+            const currentData = localStorage.getItem('soap-game-storage')
+            if (currentData) {
+              try {
+                const parsedData = JSON.parse(currentData)
+                parsedData.state = parsedData.state || {}
+                parsedData.state.userProfile = updatedProfile
+                localStorage.setItem('soap-game-storage', JSON.stringify(parsedData))
+                console.log('🔧 Saved to localStorage immediately')
+              } catch (error) {
+                console.error('Failed to save to localStorage:', error)
+              }
+            }
+            
+            return {
+              userProfile: updatedProfile
+            }
+          })
         },
       }),
     {

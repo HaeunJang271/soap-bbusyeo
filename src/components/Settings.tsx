@@ -71,10 +71,23 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
   }
 
   const handleNicknameSave = () => {
-    if (newNickname.trim()) {
-      updateNickname(newNickname.trim())
-      setShowNicknameEdit(false)
+    console.log('🔧 handleNicknameSave called with:', newNickname)
+    const trimmedNickname = newNickname.trim()
+    
+    if (trimmedNickname.length === 0) {
+      alert('닉네임을 입력해주세요.')
+      return
     }
+    
+    if (trimmedNickname.length > 10) {
+      alert('닉네임은 10자 이하로 입력해주세요.')
+      return
+    }
+    
+    console.log('🔧 Calling updateNickname with:', trimmedNickname)
+    updateNickname(trimmedNickname)
+    setShowNicknameEdit(false)
+    setNewNickname('') // 입력 필드 초기화
   }
 
   return (
@@ -177,41 +190,56 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                   <div className="flex-1">
                     {showNicknameEdit ? (
                       <div className="flex items-center space-x-2">
-                        <input
-                          type="text"
-                          value={newNickname}
-                          onChange={(e) => setNewNickname(e.target.value)}
-                          className="bg-white/20 text-white px-2 py-1 rounded text-sm flex-1"
-                          placeholder="닉네임 입력"
-                          maxLength={10}
-                        />
+                                                 <div className="flex-1">
+                           <input
+                             type="text"
+                             value={newNickname}
+                             onChange={(e) => {
+                               const value = e.target.value
+                               if (value.length <= 10) {
+                                 setNewNickname(value)
+                               }
+                             }}
+                             className="bg-white/20 text-white px-2 py-1 rounded text-sm w-full"
+                             placeholder="닉네임 입력 (1-10자)"
+                             maxLength={10}
+                           />
+                           <div className="text-xs text-white/60 mt-1 text-right">
+                             {newNickname.length}/10
+                           </div>
+                         </div>
                         <button
                           onClick={handleNicknameSave}
                           className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
                         >
                           저장
                         </button>
-                        <button
-                          onClick={() => {
-                            setShowNicknameEdit(false)
-                            setNewNickname(userProfile.nickname)
-                          }}
-                          className="text-xs bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600"
-                        >
-                          취소
-                        </button>
+                                                 <button
+                           onClick={() => {
+                             setShowNicknameEdit(false)
+                             setNewNickname(userProfile.nickname || '')
+                           }}
+                           className="text-xs bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600"
+                         >
+                           취소
+                         </button>
                       </div>
-                    ) : (
-                      <div className="flex items-center space-x-2">
-                        <p className="text-white font-medium">{userProfile.nickname}</p>
-                        <button
-                          onClick={() => setShowNicknameEdit(true)}
-                          className="text-xs text-blue-300 hover:text-blue-200"
-                        >
-                          ✏️
-                        </button>
-                      </div>
-                    )}
+                                         ) : (
+                       <div className="flex items-center space-x-2">
+                         <p className="text-white font-medium">
+                           {(() => {
+                             console.log('🔧 Rendering nickname:', userProfile?.nickname)
+                             return userProfile?.nickname || '사용자'
+                           })()}
+                         </p>
+                         <button
+                           onClick={() => setShowNicknameEdit(true)}
+                           className="text-xs text-blue-300 hover:text-blue-200"
+                         >
+                           ✏️
+                         </button>
+                       </div>
+                     )}
                     {userProfile.email && (
                       <p className="text-xs text-white/70">{userProfile.email}</p>
                     )}
