@@ -18,10 +18,14 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     toggleSound, 
     toggleHaptic, 
     toggleBackgroundMusic,
-    toggleLowPerformanceMode
+    toggleLowPerformanceMode,
+    logout,
+    updateNickname
   } = useGameStore()
 
-  const [showKakaoLogin, setShowKakaoLogin] = useState(false)
+    const [showKakaoLogin, setShowKakaoLogin] = useState(false)
+  const [showNicknameEdit, setShowNicknameEdit] = useState(false)
+  const [newNickname, setNewNickname] = useState(userProfile?.nickname || '')
 
   // 진동 지원 여부 확인
   const isVibrationSupported = typeof navigator !== 'undefined' && 'vibrate' in navigator
@@ -58,6 +62,18 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
       } else {
         console.log('Vibration not supported on this device')
       }
+    }
+  }
+
+  const handleLogout = () => {
+    logout()
+    setShowKakaoLogin(false)
+  }
+
+  const handleNicknameSave = () => {
+    if (newNickname.trim()) {
+      updateNickname(newNickname.trim())
+      setShowNicknameEdit(false)
     }
   }
 
@@ -149,29 +165,82 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
             </div>
             
             {isLoggedIn && userProfile ? (
-              <div className="flex items-center space-x-3 p-3 bg-white/10 rounded-lg">
-                {userProfile.profileImage && (
-                  <img 
-                    src={userProfile.profileImage} 
-                    alt="프로필" 
-                    className="w-10 h-10 rounded-full"
-                  />
-                )}
-                <div className="flex-1">
-                  <p className="text-white font-medium">{userProfile.nickname}</p>
-                  {userProfile.email && (
-                    <p className="text-xs text-white/70">{userProfile.email}</p>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3 p-3 bg-white/10 rounded-lg">
+                  {userProfile.profileImage && (
+                    <img 
+                      src={userProfile.profileImage} 
+                      alt="프로필" 
+                      className="w-10 h-10 rounded-full"
+                    />
                   )}
+                  <div className="flex-1">
+                    {showNicknameEdit ? (
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          value={newNickname}
+                          onChange={(e) => setNewNickname(e.target.value)}
+                          className="bg-white/20 text-white px-2 py-1 rounded text-sm flex-1"
+                          placeholder="닉네임 입력"
+                          maxLength={10}
+                        />
+                        <button
+                          onClick={handleNicknameSave}
+                          className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                        >
+                          저장
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowNicknameEdit(false)
+                            setNewNickname(userProfile.nickname)
+                          }}
+                          className="text-xs bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600"
+                        >
+                          취소
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <p className="text-white font-medium">{userProfile.nickname}</p>
+                        <button
+                          onClick={() => setShowNicknameEdit(true)}
+                          className="text-xs text-blue-300 hover:text-blue-200"
+                        >
+                          ✏️
+                        </button>
+                      </div>
+                    )}
+                    {userProfile.email && (
+                      <p className="text-xs text-white/70">{userProfile.email}</p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <button
+                    onClick={handleLogout}
+                    className="flex-1 bg-red-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors"
+                  >
+                    로그아웃
+                  </button>
+                  <button
+                    onClick={() => setShowKakaoLogin(true)}
+                    className="flex-1 bg-yellow-400 text-black py-2 px-3 rounded-lg text-sm font-medium hover:bg-yellow-500 transition-colors"
+                  >
+                    계정 변경
+                  </button>
                 </div>
               </div>
             ) : (
-                             <button
-                 onClick={() => setShowKakaoLogin(true)}
-                 className="w-full bg-yellow-400 text-black py-3 px-4 rounded-lg font-semibold hover:bg-yellow-500 transition-colors flex items-center justify-center"
-               >
-                 <span className="text-lg mr-2">💬</span>
-                 카카오로 로그인
-               </button>
+              <button
+                onClick={() => setShowKakaoLogin(true)}
+                className="w-full bg-yellow-400 text-black py-3 px-4 rounded-lg font-semibold hover:bg-yellow-500 transition-colors flex items-center justify-center"
+              >
+                <span className="text-lg mr-2">💬</span>
+                카카오로 로그인
+              </button>
             )}
           </div>
         </div>

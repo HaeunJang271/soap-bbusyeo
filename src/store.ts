@@ -621,6 +621,15 @@ export const useGameStore = create<GameState & {
           }
           return (window.Kakao as any).Auth.getAccessToken() !== null
         },
+
+        updateNickname: (newNickname: string) => {
+          set((state) => ({
+            userProfile: state.userProfile ? {
+              ...state.userProfile,
+              nickname: newNickname
+            } : null
+          }))
+        },
       }),
     {
       name: 'soap-game-storage',
