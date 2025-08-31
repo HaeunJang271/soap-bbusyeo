@@ -6,7 +6,6 @@ class AudioManager {
   private backgroundMusic: HTMLAudioElement | null = null
   private scrubAudio: HTMLAudioElement | null = null
   private popAndWowAudio: HTMLAudioElement | null = null
-  // private popAudio: HTMLAudioElement | null = null
   private isInitialized = false
   private wasBackgroundMusicPlaying = false // BGM이 재생 중이었는지 추적
   private fadeOutInterval: number | null = null // 페이드아웃 인터벌 ID
@@ -89,15 +88,9 @@ class AudioManager {
     this.popAndWowAudio.setAttribute('crossorigin', 'anonymous')
     this.popAndWowAudio.setAttribute('allow', 'autoplay; encrypted-media')
 
-    // pop.mp3 파일이 없으므로 제거
-    // this.popAudio = new Audio('/sound/pop.mp3')
-    // this.popAudio.volume = 0.2
-    // this.popAudio.preload = 'auto'
-    // this.popAudio.load() // 즉시 로드
-
     this.backgroundMusic = new Audio('/sound/DreamBubbles.mp3')
     this.backgroundMusic.loop = true
-    this.backgroundMusic.volume = 0.3 // 볼륨 증가 (0.1 -> 0.3)
+    this.backgroundMusic.volume = 0.3
     this.backgroundMusic.preload = 'auto'
     this.backgroundMusic.load() // 즉시 로드
     
@@ -156,9 +149,6 @@ class AudioManager {
     if (this.popAndWowAudio) {
       this.popAndWowAudio.load()
     }
-    // if (this.popAudio) {
-    //   this.popAudio.load()
-    // }
     if (this.backgroundMusic) {
       this.backgroundMusic.load()
     }
@@ -261,8 +251,8 @@ class AudioManager {
     if (!this.popAndWowAudio || !this.isInitialized) return
 
     // 효과음 설정 확인
-    const { soundEffectsEnabled } = useGameStore.getState()
-    if (!soundEffectsEnabled) {
+    const { soundEnabled } = useGameStore.getState()
+    if (!soundEnabled) {
       console.log('Sound effects disabled, skipping PopAndWow sound')
       return
     }
