@@ -134,10 +134,10 @@ export const availableSoaps: Soap[] = [
       color: '#DAA520',
       foamColor: '#FFD700',
       foamShape: 'bubble',
-      particles: 25,
+      particles: 17,
       power: 0.8,
       reflectivity: 1.5,
-      price: 1000,
+      price: 400,
       unlocked: false,
       texture: 'sparkle'
     }
