@@ -36,6 +36,7 @@
             Kakao.init('ed784e95b2297633451e8b525273a601');
             console.log('Kakao SDK initialized successfully');
             console.log('Kakao.isInitialized:', Kakao.isInitialized());
+            console.log('Current domain:', window.location.hostname);
           } catch (error) {
             console.error('Failed to initialize Kakao SDK:', error);
           }
