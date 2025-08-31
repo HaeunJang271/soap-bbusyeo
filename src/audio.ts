@@ -157,6 +157,13 @@ class AudioManager {
   public playScrub() {
     if (!this.scrubAudio || !this.isInitialized) return
 
+    // 효과음 설정 확인
+    const { soundEnabled } = useGameStore.getState()
+    if (!soundEnabled) {
+      console.log('Sound effects disabled, skipping scrub sound')
+      return
+    }
+
     try {
       // 기존 페이드아웃 인터벌이 있다면 정리하고 즉시 재생
       if (this.fadeOutInterval) {
