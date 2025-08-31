@@ -106,3 +106,16 @@ body {
 .animate-grow {
   animation: grow 0.5s ease-out forwards;
 }
+
+@keyframes gentle-bounce {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-gentle-bounce {
+  animation: gentle-bounce 2s ease-in-out infinite;
+}

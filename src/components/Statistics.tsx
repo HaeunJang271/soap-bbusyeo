@@ -11,7 +11,8 @@ const Statistics = ({ onClose }: StatisticsProps) => {
     totalScrubs, 
     totalCoinsEarned,
     completedSoapTypes,
-    consecutiveLoginDays
+    consecutiveLoginDays,
+    collectedToys
   } = useGameStore()
 
   const formatTime = (seconds: number) => {
@@ -27,6 +28,19 @@ const Statistics = ({ onClose }: StatisticsProps) => {
       return `${secs}초`
     }
   }
+
+  // 장난감 통계 계산
+  const getToyStats = () => {
+    const toyCounts: { [key: string]: number } = {}
+    
+    collectedToys.forEach(toy => {
+      toyCounts[toy.name] = (toyCounts[toy.name] || 0) + 1
+    })
+    
+    return toyCounts
+  }
+
+  const toyCounts = getToyStats()
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
@@ -96,6 +110,22 @@ const Statistics = ({ onClose }: StatisticsProps) => {
                 ))
               ) : (
                 <div className="text-sm opacity-70">아직 완성한 비누가 없습니다</div>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white/10 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-3">🎁 획득한 장난감</h3>
+            <div className="space-y-1">
+              {Object.keys(toyCounts).length > 0 ? (
+                Object.entries(toyCounts).map(([toyName, count]) => (
+                  <div key={toyName} className="flex justify-between text-sm">
+                    <span>{toyName}</span>
+                    <span className="font-bold">{count}개</span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm opacity-70">아직 획득한 장난감이 없습니다</div>
               )}
             </div>
           </div>

@@ -14,6 +14,17 @@ export interface Soap {
   price: number
   unlocked: boolean
   texture?: string
+  durability: number // 비누 내구도 (100%에서 시작)
+  maxDurability: number // 최대 내구도
+}
+
+export interface Toy {
+  id: string
+  name: string
+  rarity: 'common' | 'rare' | 'epic' | 'legendary'
+  icon: string
+  description: string
+  dropRate: number // 드롭 확률 (0-1)
 }
 
 export interface Tool {
@@ -49,8 +60,7 @@ export interface GameState {
   // Items
   availableSoaps: Soap[]
   availableTools: Tool[]
-  
-
+  collectedToys: Toy[] // 수집된 장난감들
   
   // Statistics
   totalSoapsCompleted: number
@@ -73,7 +83,9 @@ export const availableSoaps: Soap[] = [
      reflectivity: 1,
      price: 0,
      unlocked: true,
-     texture: 'smooth'
+     texture: 'smooth',
+     durability: 100,
+     maxDurability: 100
    },
      {
      id: 'rose',
@@ -87,7 +99,9 @@ export const availableSoaps: Soap[] = [
      reflectivity: 1.3,
      price: 100,
      unlocked: false,
-     texture: 'bubbles'
+     texture: 'bubbles',
+     durability: 100,
+     maxDurability: 100
    },
                        {
        id: 'lemon',
@@ -100,7 +114,9 @@ export const availableSoaps: Soap[] = [
        reflectivity: 1.5,
        price: 150,
        unlocked: false,
-       texture: 'stripes'
+       texture: 'stripes',
+       durability: 100,
+       maxDurability: 100
      },
      {
      id: 'mint',
@@ -113,7 +129,9 @@ export const availableSoaps: Soap[] = [
      reflectivity: 1.2,
      price: 200,
      unlocked: false,
-     texture: 'dots'
+     texture: 'dots',
+     durability: 100,
+     maxDurability: 100
    },
    {
      id: 'lavender',
@@ -126,7 +144,9 @@ export const availableSoaps: Soap[] = [
      reflectivity: 1.4,
      price: 300,
      unlocked: false,
-     texture: 'swirls'
+     texture: 'swirls',
+     durability: 100,
+     maxDurability: 100
    },
       {
       id: 'golden',
@@ -139,8 +159,78 @@ export const availableSoaps: Soap[] = [
       reflectivity: 1.5,
       price: 400,
       unlocked: false,
-      texture: 'sparkle'
+      texture: 'sparkle',
+      durability: 100,
+      maxDurability: 100
     }
+]
+
+// 장난감 데이터
+export const availableToys: Toy[] = [
+  {
+    id: 'rubber-duck',
+    name: '고무 오리',
+    rarity: 'common',
+    icon: '🦆',
+    description: '귀여운 고무 오리 장난감',
+    dropRate: 0.4
+  },
+  {
+    id: 'bubble-blower',
+    name: '비눗방울',
+    rarity: 'common',
+    icon: '🫧',
+    description: '거품을 불어주는 장난감',
+    dropRate: 0.35
+  },
+  {
+    id: 'soap-car',
+    name: '비누 자동차',
+    rarity: 'rare',
+    icon: '🚗',
+    description: '비누로 만든 미니 자동차',
+    dropRate: 0.15
+  },
+  {
+    id: 'crystal-ball',
+    name: '수정구',
+    rarity: 'rare',
+    icon: '🔮',
+    description: '반짝이는 수정구',
+    dropRate: 0.1
+  },
+  {
+    id: 'golden-coin',
+    name: '황금 동전',
+    rarity: 'epic',
+    icon: '🪙',
+    description: '희귀한 황금 동전',
+    dropRate: 0.05
+  },
+  {
+    id: 'diamond-ring',
+    name: '다이아몬드 반지',
+    rarity: 'epic',
+    icon: '💍',
+    description: '빛나는 다이아몬드 반지',
+    dropRate: 0.03
+  },
+  {
+    id: 'magic-wand',
+    name: '마법 지팡이',
+    rarity: 'legendary',
+    icon: '🪄',
+    description: '마법의 힘이 깃든 지팡이',
+    dropRate: 0.01
+  },
+  {
+    id: 'rainbow-unicorn',
+    name: '무지개 유니콘',
+    rarity: 'legendary',
+    icon: '🦄',
+    description: '전설의 무지개 유니콘',
+    dropRate: 0.005
+  }
 ]
 
 export const availableTools: Tool[] = [
@@ -204,7 +294,9 @@ export const useGameStore = create<GameState & {
   unlockSoap: (soapId: string) => void
   unlockTool: (toolId: string) => void
   
-
+  // Toy actions
+  addToy: (toy: Toy) => void
+  getRandomToy: () => Toy | null
   
   // Statistics actions
   incrementSoapsCompleted: () => void
@@ -212,6 +304,9 @@ export const useGameStore = create<GameState & {
   incrementScrubs: () => void
   addCompletedSoapType: (soapType: string) => void
   checkDailyLogin: () => { bonus: number; consecutiveDays: number; isNewLogin: boolean }
+  
+  // Soap durability actions
+  decreaseSoapDurability: (soapId: string, amount: number) => void
 }>()(
   persist(
     (set, get) => ({
@@ -223,8 +318,9 @@ export const useGameStore = create<GameState & {
        gameStartTime: null,
 
        
-       availableSoaps: availableSoaps,
-       availableTools: availableTools,
+             availableSoaps: availableSoaps,
+      availableTools: availableTools,
+      collectedToys: [] as Toy[],
       
       soundEnabled: true,
       hapticEnabled: true,
@@ -403,6 +499,45 @@ export const useGameStore = create<GameState & {
             }
           })
         },
+        addToy: (toy) => {
+          console.log('Adding toy:', toy.name)
+          set(prev => ({
+            collectedToys: [...prev.collectedToys, toy]
+          }))
+        },
+        getRandomToy: () => {
+          const random = Math.random()
+          let cumulativeRate = 0
+          
+          for (const toy of availableToys) {
+            cumulativeRate += toy.dropRate
+            if (random <= cumulativeRate) {
+              return toy
+            }
+          }
+          
+          return null
+        },
+        decreaseSoapDurability: (soapId, amount) => {
+          console.log('Decreasing soap durability:', soapId, amount)
+          set(prev => {
+            const updatedSoaps = prev.availableSoaps.map(soap => 
+              soap.id === soapId 
+                ? { ...soap, durability: Math.max(0, soap.durability - amount) }
+                : soap
+            )
+            
+            // 선택된 비누도 업데이트
+            const updatedSelectedSoap = prev.selectedSoap.id === soapId
+              ? { ...prev.selectedSoap, durability: Math.max(0, prev.selectedSoap.durability - amount) }
+              : prev.selectedSoap
+            
+            return {
+              availableSoaps: updatedSoaps,
+              selectedSoap: updatedSelectedSoap
+            }
+          })
+        },
       }),
     {
       name: 'soap-game-storage',
@@ -414,6 +549,7 @@ export const useGameStore = create<GameState & {
         totalCoinsEarned: state.totalCoinsEarned,
         availableSoaps: state.availableSoaps,
         availableTools: state.availableTools,
+        collectedToys: state.collectedToys,
 
         totalSoapsCompleted: state.totalSoapsCompleted,
         totalPlayTime: state.totalPlayTime,

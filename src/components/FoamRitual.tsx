@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react'
-import { useGameStore } from '../store'
+import { useGameStore, Toy } from '../store'
 import { audioManager } from '../audio'
 import ShareModal from './ShareModal'
 
@@ -48,7 +48,10 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     incrementScrubs,
     incrementSoapsCompleted,
     addCompletedSoapType,
-    addPlayTime
+    addPlayTime,
+    decreaseSoapDurability,
+    getRandomToy,
+    addToy
   } = useGameStore()
   
   const [isDrawing, setIsDrawing] = useState(false)
@@ -59,12 +62,15 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
   const [hasShownCompletion, setHasShownCompletion] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [gameStartTime, setGameStartTime] = useState<number | null>(null)
+  const [showToyNotification, setShowToyNotification] = useState(false)
+  const [droppedToy, setDroppedToy] = useState<Toy | null>(null)
 
 
 
   // Check for completion - show only once
   useEffect(() => {
-    if (progress >= 100 && !hasShownCompletion) {
+    console.log('Progress check:', { progress, hasShownCompletion, threshold: progress >= 90 })
+    if (progress >= 90 && !hasShownCompletion) {
       try {
         console.log('Soap completed! Progress:', progress, 'HasShownCompletion:', hasShownCompletion)
         audioManager.playPopAndWow()
@@ -79,11 +85,21 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
         // Give bonus coins for completion
         const bonusCoins = 200 // 100% 달성 보너스 코인
         addCoins(bonusCoins)
+        
+        // 장난감 드롭 시도
+        const droppedToy = getRandomToy()
+        if (droppedToy) {
+          console.log('Toy dropped:', droppedToy.name)
+          addToy(droppedToy)
+          // 장난감 획득 알림 표시
+          setShowToyNotification(true)
+          setDroppedToy(droppedToy)
+        }
       } catch (error) {
         console.error('Error in completion effect:', error)
       }
     }
-  }, [progress, hasShownCompletion, incrementSoapsCompleted, addCompletedSoapType, selectedSoap.name, addCoins])
+  }, [progress, hasShownCompletion, incrementSoapsCompleted, addCompletedSoapType, selectedSoap.name, addCoins, getRandomToy, addToy])
 
   // Reset completion state when soap changes
   useEffect(() => {
@@ -91,7 +107,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     setHasShownCompletion(false)
     setShowCompletion(false)
     updateProgress(0)
-  }, [selectedSoap, updateProgress])
+  }, [selectedSoap.id, updateProgress])
 
   // Auto-play background music when entering game screen and start game timer
   useEffect(() => {
@@ -258,7 +274,10 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     const rect = canvas.getBoundingClientRect()
     const centerX = rect.width / 2
     const centerY = rect.height / 2
-    const soapRadius = Math.min(rect.width, rect.height) / 4 // 비누 반지름을 더 크게 (6 → 4)
+    const baseRadius = Math.min(rect.width, rect.height) / 4 // 비누 반지름을 더 크게 (6 → 4)
+    // 내구도에 따라 비누 반지름 조정
+    const durabilityRatio = selectedSoap.durability / 100
+    const soapRadius = baseRadius * (0.7 + durabilityRatio * 0.3)
     
     const distanceFromCenter = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2)
     
@@ -352,32 +371,29 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     })
     createParticles(point.x, point.y, particleCount)
     
-    // Update progress - 더 부드럽고 반응성 좋은 진행도 시스템
-    const baseIncrement = selectedSoap.particles * 0.08 // 기본 증가량을 8배로 증가 (더 빠른 진행)
-    const toolMultiplier = Math.min(pressure, 2.0) // 도구 효율성을 2배로 제한
+    // Update progress - 간단하고 확실한 진행도 시스템
+    const baseIncrement = 0.8 // 더 작은 기본 증가량
+    const toolMultiplier = selectedTool?.efficiency || 1.0
     
-    // 진행도가 높을수록 더 빠르게 증가하도록 조정
-    const progressMultiplier = 1 + (progress / 100) * 0.5 // 진행도 100%일 때 1.5배 빠름
-    
-    const progressIncrement = baseIncrement * toolMultiplier * progressMultiplier
+    const progressIncrement = baseIncrement * toolMultiplier
     const newProgress = Math.min(100, progress + progressIncrement)
     
-    // Debug progress increment (로그 빈도 줄임)
-    if (Math.random() < 0.05) { // 5% 확률로 로그 출력
-      console.log('Progress increment:', {
-        soapName: selectedSoap.name,
-        particles: selectedSoap.particles,
-        pressure,
-        baseIncrement,
-        toolMultiplier,
-        progressMultiplier,
-        progressIncrement,
-        currentProgress: progress,
-        newProgress
-      })
-    }
+    // Debug progress increment
+    console.log('Progress update:', {
+      soapName: selectedSoap.name,
+      pressure,
+      baseIncrement,
+      toolMultiplier,
+      progressIncrement,
+      currentProgress: progress,
+      newProgress
+    })
     
     updateProgress(newProgress)
+    
+    // 비누 내구도 감소
+    const durabilityDecrease = 0.2 + Math.random() * 0.3 // 0.2-0.5 사이의 랜덤 감소량
+    decreaseSoapDurability(selectedSoap.id, durabilityDecrease)
     
     // Increment scrub count
     console.log('Scrubbing soap:', selectedSoap.name)
@@ -387,7 +403,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     onHaptic()
     
     setLastPoint(point)
-  }, [selectedSoap, createParticles, updateProgress, onHaptic, soundEnabled, lastPoint, progress])
+  }, [selectedSoap, createParticles, updateProgress, onHaptic, soundEnabled, lastPoint])
 
   // Event handlers
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -463,7 +479,10 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
       if (selectedSoap) {
         const centerX = canvas.width / (2 * window.devicePixelRatio)
         const centerY = canvas.height / (2 * window.devicePixelRatio)
-        const size = Math.min(canvas.width, canvas.height) / (3 * window.devicePixelRatio)
+        const baseSize = Math.min(canvas.width, canvas.height) / (3 * window.devicePixelRatio)
+        // 내구도에 따라 비누 크기 조정 (100%에서 70%까지 줄어듦)
+        const durabilityRatio = selectedSoap.durability / 100
+        const size = baseSize * (0.7 + durabilityRatio * 0.3)
 
         // Soap gradient
         const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, size)
@@ -824,8 +843,6 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
               style={{ width: `${Math.min(progress, 100)}%` }}
             />
           </div>
-          
-
         </div>
       </div>
 
@@ -931,6 +948,37 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
           score={100}
           soapName={selectedSoap.name}
         />
+      )}
+
+      {/* Toy Notification */}
+      {showToyNotification && droppedToy && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
+          <div className="bg-white rounded-2xl p-6 text-center shadow-2xl max-w-sm mx-4 animate-gentle-bounce">
+            <div className="text-4xl mb-4">{droppedToy.icon}</div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">장난감 획득!</h2>
+            <p className="text-gray-600 mb-2">{droppedToy.name}</p>
+            <p className="text-sm text-gray-500 mb-4">{droppedToy.description}</p>
+            <div className={`text-sm font-bold mb-4 ${
+              droppedToy.rarity === 'common' ? 'text-gray-600' :
+              droppedToy.rarity === 'rare' ? 'text-blue-600' :
+              droppedToy.rarity === 'epic' ? 'text-purple-600' :
+              'text-yellow-600'
+            }`}>
+              {droppedToy.rarity === 'common' ? '일반' :
+               droppedToy.rarity === 'rare' ? '레어' :
+               droppedToy.rarity === 'epic' ? '에픽' : '레전더리'}
+            </div>
+            <button
+              onClick={() => {
+                setShowToyNotification(false)
+                setDroppedToy(null)
+              }}
+              className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors"
+            >
+              확인
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )
