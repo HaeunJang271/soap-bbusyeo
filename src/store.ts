@@ -596,7 +596,7 @@ export const useGameStore = create<GameState & {
               })
             })
 
-            // 상태 업데이트 - 기존 닉네임 유지 (localStorage에서 직접 확인)
+            // 상태 업데이트 - 기존 닉네임 유지 및 백업 데이터 복원
             set(() => {
               // localStorage에서 저장된 사용자 프로필 확인 (별도 키로 저장)
               let existingNickname = localStorage.getItem('user-nickname')
@@ -634,11 +634,48 @@ export const useGameStore = create<GameState & {
               console.log('🔧 loginWithKakao - kakaoNickname:', kakaoNickname)
               console.log('🔧 loginWithKakao - final nickname:', existingNickname || kakaoNickname)
               
+              // 백업 데이터 복원 시도
+              const userId = userInfo.id.toString()
+              const backupKey = `user-backup-${userId}`
+              const backupData = localStorage.getItem(backupKey)
+              
+              if (backupData) {
+                try {
+                  const parsedBackup = JSON.parse(backupData)
+                  console.log('🔧 Found backup data for user:', userId)
+                  
+                  return {
+                    isLoggedIn: true,
+                    userProfile: {
+                      id: userId,
+                      nickname: existingNickname || kakaoNickname,
+                      profileImage: userInfo.properties?.profile_image || userInfo.kakao_account?.profile?.profile_image_url || null,
+                      email: userInfo.kakao_account?.email || null
+                    },
+                    // 백업된 게임 데이터 복원
+                    coins: parsedBackup.coins || 0,
+                    totalCoinsEarned: parsedBackup.totalCoinsEarned || 0,
+                    availableSoaps: parsedBackup.availableSoaps || [],
+                    availableTools: parsedBackup.availableTools || [],
+                    collectedToys: parsedBackup.collectedToys || [],
+                    totalSoapsCompleted: parsedBackup.totalSoapsCompleted || 0,
+                    totalPlayTime: parsedBackup.totalPlayTime || 0,
+                    totalScrubs: parsedBackup.totalScrubs || 0,
+                    completedSoapTypes: parsedBackup.completedSoapTypes || [],
+                    lastLoginDate: parsedBackup.lastLoginDate || null,
+                    consecutiveLoginDays: parsedBackup.consecutiveLoginDays || 0
+                  }
+                } catch (error) {
+                  console.error('Failed to parse backup data:', error)
+                }
+              }
+              
+              // 백업 데이터가 없으면 기본 상태로 로그인
               return {
                 isLoggedIn: true,
                 userProfile: {
-                  id: userInfo.id.toString(),
-                  nickname: existingNickname || kakaoNickname, // 기존 닉네임이 있으면 유지
+                  id: userId,
+                  nickname: existingNickname || kakaoNickname,
                   profileImage: userInfo.properties?.profile_image || userInfo.kakao_account?.profile?.profile_image_url || null,
                   email: userInfo.kakao_account?.email || null
                 }
@@ -656,10 +693,61 @@ export const useGameStore = create<GameState & {
           if (window.Kakao) {
             (window.Kakao as any).Auth.logout()
           }
-          set(() => ({
+          
+          // 현재 상태를 백업 (로그인 시 복원용)
+          const currentState = get()
+          const backupData = {
+            coins: currentState.coins,
+            totalCoinsEarned: currentState.totalCoinsEarned,
+            availableSoaps: currentState.availableSoaps,
+            availableTools: currentState.availableTools,
+            collectedToys: currentState.collectedToys,
+            totalSoapsCompleted: currentState.totalSoapsCompleted,
+            totalPlayTime: currentState.totalPlayTime,
+            totalScrubs: currentState.totalScrubs,
+            completedSoapTypes: currentState.completedSoapTypes,
+            lastLoginDate: currentState.lastLoginDate,
+            consecutiveLoginDays: currentState.consecutiveLoginDays,
+            userProfile: currentState.userProfile
+          }
+          
+          // 백업 데이터를 사용자별로 저장
+          if (currentState.userProfile?.id) {
+            localStorage.setItem(`user-backup-${currentState.userProfile.id}`, JSON.stringify(backupData))
+            console.log('🔧 User data backed up for user:', currentState.userProfile.id)
+          }
+          
+          // 게임 상태 초기화
+          set((state) => ({
+            ...state,
             isLoggedIn: false,
-            userProfile: null
+            userProfile: null,
+            coins: 0,
+            totalCoinsEarned: 0,
+            availableSoaps: [
+              { id: 'basic', name: '기본 비누', color: '#E6F3FF', foamColor: '#FFFFFF', foamShape: 'foam', particles: 10, power: 0.3, reflectivity: 1, price: 0, unlocked: true, texture: 'smooth', durability: 0, maxDurability: 100 },
+              { id: 'rose', name: '장미 비누', color: '#FFE6F3', foamColor: '#FFE6F3', foamShape: 'bubble', isBubble: true, particles: 15, power: 0.6, reflectivity: 1.3, price: 100, unlocked: false, texture: 'bubbles', durability: 100, maxDurability: 100 },
+              { id: 'lemon', name: '레몬 비누', color: '#FFFACD', foamColor: '#FFFACD', foamShape: 'foam', particles: 8, power: 0.4, reflectivity: 1.5, price: 150, unlocked: false, texture: 'stripes', durability: 100, maxDurability: 100 },
+              { id: 'mint', name: '민트 비누', color: '#E6FFF3', foamColor: '#E6FFF3', foamShape: 'foam', particles: 12, power: 0.5, reflectivity: 1.2, price: 200, unlocked: false, texture: 'dots', durability: 100, maxDurability: 100 },
+              { id: 'lavender', name: '라벤더 비누', color: '#E6E6FA', foamColor: '#E6E6FA', foamShape: 'foam', particles: 18, power: 0.7, reflectivity: 1.4, price: 300, unlocked: false, texture: 'swirls', durability: 100, maxDurability: 100 },
+              { id: 'golden', name: '골든 비누', color: '#DAA520', foamColor: '#FFD700', foamShape: 'bubble', particles: 17, power: 0.8, reflectivity: 1.5, price: 400, unlocked: false, texture: 'sparkle', durability: 100, maxDurability: 100 }
+            ],
+            availableTools: [
+              { id: 'hand', name: '손', icon: '👐', price: 0, unlocked: true, efficiency: 1 },
+              { id: 'brush', name: '거품볼', icon: '🧽', price: 500, unlocked: false, efficiency: 1.5 },
+              { id: 'brush-tool', name: '브러시', icon: '🪥', price: 800, unlocked: false, efficiency: 2 },
+              { id: 'sponge', name: '스폰지', icon: '🧽', price: 1200, unlocked: false, efficiency: 2.5 }
+            ],
+            collectedToys: [],
+            totalSoapsCompleted: 0,
+            totalPlayTime: 0,
+            totalScrubs: 0,
+            completedSoapTypes: [],
+            lastLoginDate: null,
+            consecutiveLoginDays: 0
           }))
+          
+          console.log('🔧 Game state reset after logout')
         },
 
         checkKakaoLoginStatus: () => {
