@@ -71,7 +71,7 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     if (progress >= 100 && !hasShownCompletion) {
       try {
         console.log('Soap completed! Progress:', progress, 'HasShownCompletion:', hasShownCompletion)
-        audioManager.playPop()
+        audioManager.playPopAndWow()
         setShowCompletion(true)
         setHasShownCompletion(true)
         

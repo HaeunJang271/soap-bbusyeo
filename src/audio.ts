@@ -3,6 +3,7 @@ class AudioManager {
 
   private backgroundMusic: HTMLAudioElement | null = null
   private scrubAudio: HTMLAudioElement | null = null
+  private popAndWowAudio: HTMLAudioElement | null = null
   // private popAudio: HTMLAudioElement | null = null
   private isInitialized = false
   private wasBackgroundMusicPlaying = false // BGM이 재생 중이었는지 추적
@@ -74,6 +75,18 @@ class AudioManager {
     this.scrubAudio.setAttribute('crossorigin', 'anonymous')
     this.scrubAudio.setAttribute('allow', 'autoplay; encrypted-media')
 
+    // PopAndWow.mp3 파일 추가
+    this.popAndWowAudio = new Audio('/sound/PopAndWow.mp3')
+    this.popAndWowAudio.volume = 0.4
+    this.popAndWowAudio.preload = 'auto'
+    this.popAndWowAudio.load() // 즉시 로드
+    
+    // 화면 녹화 시 사운드 캡처를 위한 설정
+    this.popAndWowAudio.setAttribute('playsinline', 'true')
+    this.popAndWowAudio.setAttribute('webkit-playsinline', 'true')
+    this.popAndWowAudio.setAttribute('crossorigin', 'anonymous')
+    this.popAndWowAudio.setAttribute('allow', 'autoplay; encrypted-media')
+
     // pop.mp3 파일이 없으므로 제거
     // this.popAudio = new Audio('/sound/pop.mp3')
     // this.popAudio.volume = 0.2
@@ -137,6 +150,9 @@ class AudioManager {
     // 모바일에서 오디오 파일들을 미리 로드
     if (this.scrubAudio) {
       this.scrubAudio.load()
+    }
+    if (this.popAndWowAudio) {
+      this.popAndWowAudio.load()
     }
     // if (this.popAudio) {
     //   this.popAudio.load()
@@ -239,16 +255,46 @@ class AudioManager {
     return this.scrubAudio ? !this.scrubAudio.paused : false
   }
 
-  public playPop() {
-    // pop.mp3 파일이 없으므로 제거
-    // if (!this.popAudio || !this.isInitialized) return
+  public playPopAndWow() {
+    if (!this.popAndWowAudio || !this.isInitialized) return
 
-    // try {
-    //   this.popAudio.currentTime = 0
-    //   this.popAudio.play().catch(console.error)
-    // } catch (error) {
-    //   console.error('Failed to play pop sound:', error)
-    // }
+    try {
+      // 모바일에서 오디오 컨텍스트 재개
+      if (this.audioContext && this.audioContext.state === 'suspended') {
+        this.audioContext.resume()
+      }
+      
+      // 상세한 오디오 디버깅 (첫 번째 호출 시에만)
+      if (!this.popAndWowAudio.hasAttribute('data-debug-done')) {
+        this.debugAudioElement(this.popAndWowAudio, 'PopAndWow Sound')
+        this.popAndWowAudio.setAttribute('data-debug-done', 'true')
+      }
+      
+      // 딜레이 줄이기 위해 load() 호출 최소화
+      if (this.popAndWowAudio.readyState < 2) {
+        this.popAndWowAudio.load()
+      }
+      
+      // 볼륨 설정
+      this.popAndWowAudio.volume = 0.4
+      
+      // 재생
+      this.popAndWowAudio.currentTime = 0
+      this.popAndWowAudio.play().catch((error) => {
+        console.error('Failed to play PopAndWow sound:', error)
+        // 모바일에서 실패 시 빠르게 재시도
+        setTimeout(() => {
+          this.popAndWowAudio?.play().catch(console.error)
+        }, 10)
+      })
+    } catch (error) {
+      console.error('Failed to play PopAndWow sound:', error)
+    }
+  }
+
+  public playPop() {
+    // PopAndWow.mp3로 대체
+    this.playPopAndWow()
   }
 
   private isPlayingBackgroundMusic = false
