@@ -389,7 +389,7 @@ class AudioManager {
     if (!audio.hasAttribute('data-debug-listeners')) {
       audio.setAttribute('data-debug-listeners', 'true')
       
-      const events = ['loadstart', 'loadedmetadata', 'canplay', 'canplaythrough', 'play', 'playing', 'pause', 'ended', 'waiting', 'stalled', 'suspend', 'error', 'timeupdate']
+      const events = ['loadstart', 'loadedmetadata', 'canplay', 'canplaythrough', 'play', 'playing', 'pause', 'ended', 'waiting', 'stalled', 'suspend', 'error']
       events.forEach(ev => {
         audio.addEventListener(ev, () => {
           console.log(`[AUDIO ${name}]`, ev, {
@@ -400,6 +400,20 @@ class AudioManager {
             muted: audio.muted
           })
         })
+      })
+      
+      // timeupdate는 너무 자주 발생하므로 제거하거나 조건부로만 로그
+      audio.addEventListener('timeupdate', () => {
+        // 10초마다 한 번씩만 로그 (디버깅용)
+        if (Math.floor(audio.currentTime) % 10 === 0 && audio.currentTime > 0) {
+          console.log(`[AUDIO ${name}] timeupdate (10초마다)`, {
+            readyState: audio.readyState,
+            paused: audio.paused,
+            currentTime: audio.currentTime,
+            volume: audio.volume,
+            muted: audio.muted
+          })
+        }
       })
     }
 
