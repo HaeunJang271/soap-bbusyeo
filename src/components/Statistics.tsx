@@ -1,11 +1,10 @@
-import React from 'react'
 import { useGameStore } from '../store'
 
 interface StatisticsProps {
   onClose: () => void
 }
 
-const Statistics: React.FC<StatisticsProps> = ({ onClose }) => {
+const Statistics = ({ onClose }: StatisticsProps) => {
   const { 
     totalSoapsCompleted, 
     totalPlayTime, 
