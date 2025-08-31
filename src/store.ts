@@ -46,6 +46,14 @@ export interface GameState {
   progress: number
   gameStartTime: number | null
 
+  // User Authentication
+  isLoggedIn: boolean
+  userProfile: {
+    id: string | null
+    nickname: string | null
+    profileImage: string | null
+    email: string | null
+  } | null
   
   // Settings
   soundEnabled: boolean
@@ -317,6 +325,10 @@ export const useGameStore = create<GameState & {
        progress: 0,
        gameStartTime: null,
 
+       // User Authentication
+       isLoggedIn: false,
+       userProfile: null,
+
        
              availableSoaps: availableSoaps,
       availableTools: availableTools,
@@ -538,6 +550,77 @@ export const useGameStore = create<GameState & {
             }
           })
         },
+        
+        // 카카오 로그인 관련 액션들
+        loginWithKakao: async () => {
+          try {
+            if (!window.Kakao) {
+              console.error('Kakao SDK not loaded')
+              return { success: false, error: 'Kakao SDK not loaded' }
+            }
+
+            const response = await new Promise<any>((resolve, reject) => {
+              (window.Kakao as any).Auth.login({
+                success: (authObj: any) => {
+                  console.log('Kakao login success:', authObj)
+                  resolve(authObj)
+                },
+                fail: (err: any) => {
+                  console.error('Kakao login failed:', err)
+                  reject(err)
+                }
+              })
+            })
+
+            // 사용자 정보 가져오기
+            const userInfo = await new Promise<any>((resolve, reject) => {
+              (window.Kakao as any).API.request({
+                url: '/v2/user/me',
+                success: (res: any) => {
+                  console.log('Kakao user info:', res)
+                  resolve(res)
+                },
+                fail: (err: any) => {
+                  console.error('Failed to get user info:', err)
+                  reject(err)
+                }
+              })
+            })
+
+            // 상태 업데이트
+            set(prev => ({
+              isLoggedIn: true,
+              userProfile: {
+                id: userInfo.id.toString(),
+                nickname: userInfo.properties?.nickname || userInfo.kakao_account?.profile?.nickname || '사용자',
+                profileImage: userInfo.properties?.profile_image || userInfo.kakao_account?.profile?.profile_image_url || null,
+                email: userInfo.kakao_account?.email || null
+              }
+            }))
+
+            return { success: true, userInfo }
+          } catch (error) {
+            console.error('Kakao login error:', error)
+            return { success: false, error }
+          }
+        },
+
+        logout: () => {
+          if (window.Kakao) {
+            (window.Kakao as any).Auth.logout()
+          }
+          set(prev => ({
+            isLoggedIn: false,
+            userProfile: null
+          }))
+        },
+
+        checkKakaoLoginStatus: () => {
+          if (!window.Kakao) {
+            return false
+          }
+          return (window.Kakao as any).Auth.getAccessToken() !== null
+        },
       }),
     {
       name: 'soap-game-storage',
@@ -557,6 +640,10 @@ export const useGameStore = create<GameState & {
         completedSoapTypes: state.completedSoapTypes,
         lastLoginDate: state.lastLoginDate,
         consecutiveLoginDays: state.consecutiveLoginDays,
+        
+        // User authentication data
+        isLoggedIn: state.isLoggedIn,
+        userProfile: state.userProfile,
       })
     }
   )

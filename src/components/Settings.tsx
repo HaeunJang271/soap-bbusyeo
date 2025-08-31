@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useGameStore } from '../store'
 import { audioManager } from '../audio'
+import KakaoLogin from './KakaoLogin'
 
 interface SettingsProps {
   onClose: () => void
@@ -12,11 +13,15 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     hapticEnabled, 
     backgroundMusicEnabled,
     lowPerformanceMode,
+    isLoggedIn,
+    userProfile,
     toggleSound, 
     toggleHaptic, 
     toggleBackgroundMusic,
     toggleLowPerformanceMode
   } = useGameStore()
+
+  const [showKakaoLogin, setShowKakaoLogin] = useState(false)
 
   // 진동 지원 여부 확인
   const isVibrationSupported = typeof navigator !== 'undefined' && 'vibrate' in navigator
@@ -133,11 +138,52 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
               }`} />
             </button>
           </div>
+
+          {/* 카카오 로그인 섹션 */}
+          <div className="border-t border-white/20 pt-4 mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-lg">💬 계정</span>
+              <span className="text-xs text-blue-300 opacity-80">
+                {isLoggedIn ? '로그인됨' : '로그인 필요'}
+              </span>
+            </div>
+            
+            {isLoggedIn && userProfile ? (
+              <div className="flex items-center space-x-3 p-3 bg-white/10 rounded-lg">
+                {userProfile.profileImage && (
+                  <img 
+                    src={userProfile.profileImage} 
+                    alt="프로필" 
+                    className="w-10 h-10 rounded-full"
+                  />
+                )}
+                <div className="flex-1">
+                  <p className="text-white font-medium">{userProfile.nickname}</p>
+                  {userProfile.email && (
+                    <p className="text-xs text-white/70">{userProfile.email}</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowKakaoLogin(true)}
+                className="w-full bg-yellow-400 text-black py-3 px-4 rounded-lg font-semibold hover:bg-yellow-500 transition-colors flex items-center justify-center"
+              >
+                <span className="text-lg mr-2">💬</span>
+                카카오로 로그인
+              </button>
+            )}
+          </div>
         </div>
         
         <div className="mt-6 text-center text-sm opacity-70">
           설정이 자동으로 저장됩니다
         </div>
+
+        {/* 카카오 로그인 모달 */}
+        {showKakaoLogin && (
+          <KakaoLogin onClose={() => setShowKakaoLogin(false)} />
+        )}
       </div>
     </div>
   )

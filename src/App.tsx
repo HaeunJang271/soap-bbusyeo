@@ -8,12 +8,14 @@ import Settings from './components/Settings'
 import Statistics from './components/Statistics'
 import LoginBonus from './components/LoginBonus'
 import ShareModal from './components/ShareModal'
+import WelcomeLogin from './components/WelcomeLogin'
 
 function App() {
   const { 
     isPlaying, 
     backgroundMusicEnabled,
     hapticEnabled,
+    isLoggedIn,
     checkDailyLogin 
   } = useGameStore()
 
@@ -22,6 +24,7 @@ function App() {
   const [showLoginBonus, setShowLoginBonus] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [showOverlay, setShowOverlay] = useState(true)
+  const [showWelcomeLogin, setShowWelcomeLogin] = useState(false)
   const [loginBonusData, setLoginBonusData] = useState<{ bonus: number; consecutiveDays: number } | null>(null)
 
   useEffect(() => {
@@ -39,7 +42,13 @@ function App() {
       })
       setShowLoginBonus(true)
     }
-  }, []) // Run only once on mount
+
+    // Show welcome login screen if not logged in and it's the first visit
+    const hasShownWelcomeLogin = localStorage.getItem('hasShownWelcomeLogin')
+    if (!isLoggedIn && !hasShownWelcomeLogin) {
+      setShowWelcomeLogin(true)
+    }
+  }, [isLoggedIn]) // Run when component mounts and when login status changes
 
   useEffect(() => {
     // Initialize audio on first user interaction
@@ -188,6 +197,11 @@ function App() {
         <ShareModal
           onClose={() => setShowShare(false)}
         />
+      )}
+
+      {/* Welcome Login Modal */}
+      {showWelcomeLogin && (
+        <WelcomeLogin onClose={() => setShowWelcomeLogin(false)} />
       )}
 
       {/* Waiting Overlay */}
