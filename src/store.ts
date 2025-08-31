@@ -315,6 +315,11 @@ export const useGameStore = create<GameState & {
   
   // Soap durability actions
   decreaseSoapDurability: (soapId: string, amount: number) => void
+  
+  // Authentication actions
+  loginWithKakao: () => Promise<{ success: boolean; userInfo?: any; error?: any }>
+  logout: () => void
+  checkKakaoLoginStatus: () => boolean
 }>()(
   persist(
     (set, get) => ({
@@ -566,7 +571,7 @@ export const useGameStore = create<GameState & {
             console.log('Kakao.isInitialized:', (window.Kakao as any).isInitialized())
             
             // 카카오 로그인 요청
-            const response = await new Promise<any>((resolve, reject) => {
+            await new Promise<any>((resolve, reject) => {
               (window.Kakao as any).Auth.login({
                 success: (authObj: any) => {
                   console.log('Kakao login success:', authObj)
@@ -596,7 +601,7 @@ export const useGameStore = create<GameState & {
             })
 
             // 상태 업데이트
-            set(prev => ({
+            set(() => ({
               isLoggedIn: true,
               userProfile: {
                 id: userInfo.id.toString(),
@@ -617,7 +622,7 @@ export const useGameStore = create<GameState & {
           if (window.Kakao) {
             (window.Kakao as any).Auth.logout()
           }
-          set(prev => ({
+          set(() => ({
             isLoggedIn: false,
             userProfile: null
           }))

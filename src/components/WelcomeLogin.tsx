@@ -7,7 +7,7 @@ interface WelcomeLoginProps {
 }
 
 const WelcomeLogin = ({ onClose }: WelcomeLoginProps) => {
-  const { isLoggedIn, userProfile } = useGameStore()
+  const { isLoggedIn } = useGameStore()
   const [showKakaoLogin, setShowKakaoLogin] = useState(false)
 
   const handleLoginClick = () => {
