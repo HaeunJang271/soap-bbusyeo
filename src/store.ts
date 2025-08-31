@@ -560,43 +560,64 @@ export const useGameStore = create<GameState & {
         // 카카오 로그인 관련 액션들
         loginWithKakao: async () => {
           try {
+            console.log('🔧 loginWithKakao 시작')
+            
             // 브라우저 환경 확인
             if (typeof window === 'undefined') {
+              console.log('🔧 Browser environment not available')
               return { success: false, error: 'Browser environment required' }
             }
 
+            console.log('🔧 Kakao SDK 확인 중...')
             if (!window.Kakao) {
+              console.log('🔧 Kakao SDK not found')
               alert('카카오 SDK가 로드되지 않았습니다. 페이지를 새로고침해주세요.')
               return { success: false, error: 'Kakao SDK not loaded' }
             }
 
+            console.log('🔧 Kakao SDK 초기화 확인 중...')
             // 카카오 SDK 초기화 확인
             if (!(window.Kakao as any).isInitialized()) {
+              console.log('🔧 Kakao SDK not initialized')
               alert('카카오 SDK가 초기화되지 않았습니다. 페이지를 새로고침해주세요.')
               return { success: false, error: 'Kakao SDK not initialized' }
             }
 
+            console.log('🔧 Kakao SDK 초기화됨')
+
             // 모바일 환경 확인
             const isMobile = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+            console.log('🔧 모바일 환경:', isMobile)
             
             // 팝업 차단 확인 (데스크톱 환경에서만)
             if (typeof window !== 'undefined' && !isMobile) {
+              console.log('🔧 팝업 차단 확인 중...')
               const popupTest = window.open('', '_blank', 'width=1,height=1')
               if (!popupTest) {
+                console.log('🔧 팝업 차단됨')
                 alert('팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.')
                 return { success: false, error: 'Popup blocked' }
               }
               popupTest.close()
+              console.log('🔧 팝업 허용됨')
             }
 
             // 카카오 로그인 요청
+            console.log('🔧 카카오 로그인 요청 시작...')
             await new Promise<any>((resolve, reject) => {
               const loginWindow = (window.Kakao as any).Auth.login({
                 success: (authObj: any) => {
+                  console.log('🔧 카카오 로그인 성공:', authObj)
                   resolve(authObj)
                 },
                 fail: (err: any) => {
-                  console.error('Kakao Auth login failed:', err)
+                  console.error('🔧 Kakao Auth login failed:', err)
+                  console.log('🔧 에러 상세 정보:', {
+                    error: err.error,
+                    error_description: err.error_description,
+                    error_code: err.error_code
+                  })
+                  
                   // 팝업 차단 오류인지 확인
                   if (err.error === 'popup_closed_by_user' || err.error === 'popup_blocked') {
                     if (isMobile) {
@@ -605,7 +626,18 @@ export const useGameStore = create<GameState & {
                       alert('로그인 팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.')
                     }
                   } else {
-                    alert('로그인에 실패했습니다. 다시 시도해주세요.')
+                    // 더 구체적인 에러 메시지
+                    let errorMessage = '로그인에 실패했습니다.'
+                    if (err.error === 'access_denied') {
+                      errorMessage = '로그인이 취소되었습니다.'
+                    } else if (err.error === 'invalid_request') {
+                      errorMessage = '잘못된 요청입니다. 다시 시도해주세요.'
+                    } else if (err.error === 'server_error') {
+                      errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+                    } else if (err.error_description) {
+                      errorMessage = `로그인 오류: ${err.error_description}`
+                    }
+                    alert(errorMessage)
                   }
                   reject(err)
                 }
@@ -623,14 +655,21 @@ export const useGameStore = create<GameState & {
             })
 
             // 사용자 정보 가져오기
+            console.log('🔧 사용자 정보 요청 시작...')
             const userInfo = await new Promise<any>((resolve, reject) => {
               (window.Kakao as any).API.request({
                 url: '/v2/user/me',
                 success: (res: any) => {
+                  console.log('🔧 사용자 정보 성공:', res)
                   resolve(res)
                 },
                 fail: (err: any) => {
-                  console.error('Kakao API request failed:', err)
+                  console.error('🔧 Kakao API request failed:', err)
+                  console.log('🔧 API 에러 상세 정보:', {
+                    error: err.error,
+                    error_description: err.error_description,
+                    error_code: err.error_code
+                  })
                   reject(err)
                 }
               })

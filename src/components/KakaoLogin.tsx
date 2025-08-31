@@ -14,25 +14,32 @@ const KakaoLogin = ({ onClose }: KakaoLoginProps) => {
     
     setIsLoading(true)
     try {
+      console.log('🔧 KakaoLogin 컴포넌트 - 로그인 시작')
+      
       // 모바일 환경 확인
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      console.log('🔧 모바일 환경:', isMobile)
       
       // 카카오 SDK 확인
       if (typeof window.Kakao === 'undefined') {
+        console.log('🔧 Kakao SDK not found in component')
         alert('카카오 SDK를 불러올 수 없습니다. 페이지를 새로고침해주세요.')
         return
       }
 
+      console.log('🔧 loginWithKakao 호출...')
       const result = await loginWithKakao()
+      console.log('🔧 loginWithKakao 결과:', result)
+      
       if (result.success) {
-        console.log('카카오 로그인 성공!')
+        console.log('🔧 카카오 로그인 성공!')
         // Mark that welcome login has been shown
         if (typeof window !== 'undefined') {
           localStorage.setItem('hasShownWelcomeLogin', 'true')
         }
         onClose()
       } else {
-        console.error('카카오 로그인 실패:', result.error)
+        console.error('🔧 카카오 로그인 실패:', result.error)
         
         // 더 구체적인 오류 메시지
         let errorMessage = '로그인에 실패했습니다.'
@@ -50,10 +57,11 @@ const KakaoLogin = ({ onClose }: KakaoLoginProps) => {
           errorMessage = '네트워크 오류가 발생했습니다. 인터넷 연결을 확인하고 다시 시도해주세요.'
         }
         
+        console.log('🔧 표시할 에러 메시지:', errorMessage)
         alert(errorMessage)
       }
     } catch (error) {
-      console.error('카카오 로그인 오류:', error)
+      console.error('🔧 카카오 로그인 오류:', error)
       alert('로그인 중 오류가 발생했습니다. 다시 시도해주세요.')
     } finally {
       setIsLoading(false)
