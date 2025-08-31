@@ -559,56 +559,34 @@ export const useGameStore = create<GameState & {
         // 카카오 로그인 관련 액션들
         loginWithKakao: async () => {
           try {
-            console.log('=== 카카오 로그인 디버깅 시작 ===')
-            console.log('window.Kakao exists:', !!window.Kakao)
-            console.log('Current URL:', window.location.href)
-            console.log('Current domain:', window.location.hostname)
-            console.log('User agent:', navigator.userAgent)
-            
             if (!window.Kakao) {
-              console.error('❌ Kakao SDK not loaded')
               return { success: false, error: 'Kakao SDK not loaded' }
             }
 
-            // 카카오 SDK 초기화 상태 확인
-            console.log('Kakao.isInitialized:', (window.Kakao as any).isInitialized())
-            console.log('Kakao SDK version:', (window.Kakao as any).VERSION)
-            
             // 카카오 로그인 요청
-            const authResult = await new Promise<any>((resolve, reject) => {
-              console.log('🔄 카카오 로그인 요청 시작...')
+            await new Promise<any>((resolve, reject) => {
               (window.Kakao as any).Auth.login({
                 success: (authObj: any) => {
-                  console.log('✅ Kakao login success:', authObj)
                   resolve(authObj)
                 },
                 fail: (err: any) => {
-                  console.error('❌ Kakao login failed:', err)
-                  console.error('Error details:', JSON.stringify(err, null, 2))
                   reject(err)
                 }
               })
             })
-            
-            console.log('🔑 인증 토큰 획득:', authResult)
 
             // 사용자 정보 가져오기
             const userInfo = await new Promise<any>((resolve, reject) => {
-              console.log('🔄 사용자 정보 요청 시작...')
               (window.Kakao as any).API.request({
                 url: '/v2/user/me',
                 success: (res: any) => {
-                  console.log('✅ Kakao user info:', res)
                   resolve(res)
                 },
                 fail: (err: any) => {
-                  console.error('❌ Failed to get user info:', err)
                   reject(err)
                 }
               })
             })
-            
-            console.log('👤 사용자 정보 획득:', userInfo)
 
             // 상태 업데이트
             set(() => ({
@@ -621,11 +599,8 @@ export const useGameStore = create<GameState & {
               }
             }))
 
-            console.log('✅ 카카오 로그인 완료!')
             return { success: true, userInfo }
           } catch (error) {
-            console.error('❌ Kakao login error:', error)
-            console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
             return { success: false, error }
           }
         },

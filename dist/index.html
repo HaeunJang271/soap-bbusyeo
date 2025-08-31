@@ -29,35 +29,18 @@
     <!-- Kakao SDK -->
     <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
     <script>
-      // 카카오 SDK 초기화 (실제 앱 키로 교체 필요)
+      // 카카오 SDK 초기화
       window.addEventListener('load', function() {
         if (typeof Kakao !== 'undefined') {
           try {
             Kakao.init('ed784e95b2297633451e8b525273a601');
-            console.log('Kakao SDK initialized successfully');
-            console.log('Kakao.isInitialized:', Kakao.isInitialized());
-            console.log('Current domain:', window.location.hostname);
           } catch (error) {
             console.error('Failed to initialize Kakao SDK:', error);
           }
-        } else {
-          console.error('Kakao SDK not available');
         }
       });
-      
-      // 화면 녹화 시 사운드 캡처를 위한 설정
-      if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
-        console.log('Screen recording with audio capture supported');
-      }
-      
-      // 오디오 컨텍스트 초기화 (화면 녹화 지원)
-      if (window.AudioContext || window.webkitAudioContext) {
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        const audioContext = new AudioContextClass();
-        console.log('AudioContext created for screen recording support');
-      }
     </script>
-    <script type="module" crossorigin src="/assets/index-Bi2MAgXh.js"></script>
+    <script type="module" crossorigin src="/assets/index-azlLJ4LZ.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-D-Brbx1e.css">
   <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
   <body>

@@ -1,1 +1,71 @@
-if(!self.define){let e,i={};const s=(s,n)=>(s=new URL(s+".js",n).href,i[s]||new Promise(i=>{if("document"in self){const e=document.createElement("script");e.src=s,e.onload=i,document.head.appendChild(e)}else e=s,importScripts(s),i()}).then(()=>{let e=i[s];if(!e)throw new Error(`Module ${s} didn’t register its module`);return e}));self.define=(n,r)=>{const o=e||("document"in self?document.currentScript.src:"")||location.href;if(i[o])return;let f={};const t=e=>s(e,o),c={module:{uri:o},exports:f,require:t};i[o]=Promise.all(n.map(e=>c[e]||t(e))).then(e=>(r(...e),f))}}define(["./workbox-5ffe50d4"],function(e){"use strict";self.skipWaiting(),e.clientsClaim(),e.precacheAndRoute([{url:"assets/index-Bi2MAgXh.js",revision:null},{url:"assets/index-D-Brbx1e.css",revision:null},{url:"icon.svg",revision:"1507e568e938503697f7f1b77418878e"},{url:"index.html",revision:"12fd12e2cfd15a842c807770dd3eae84"},{url:"pwa-192x192.png",revision:"6165fe37ad31280977e2f95536823726"},{url:"pwa-512x512.png",revision:"96369b0ffdd4cd16eb6bfa2ab9b7a1d2"},{url:"registerSW.js",revision:"1872c500de691dce40960bb85481de07"},{url:"sound/DreamBubbles.mp3",revision:"1b2ace392c066c716526f630af56b5c7"},{url:"sound/PopAndWow.mp3",revision:"dff585b7b17438093a7cf40fa1c91ac7"},{url:"icon.svg",revision:"1507e568e938503697f7f1b77418878e"},{url:"manifest.webmanifest",revision:"90915ffc690cb3b58c70f16563378894"}],{}),e.cleanupOutdatedCaches(),e.registerRoute(new e.NavigationRoute(e.createHandlerBoundToURL("index.html")))});
+// Service Worker for SoapBbusyeo PWA
+const CACHE_NAME = 'soap-bbusyeo-v3' // 버전 업데이트
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/manifest.webmanifest',
+  '/icon.svg'
+]
+
+// Install event - cache resources
+self.addEventListener('install', (event) => {
+  console.log('Service Worker installing...')
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        console.log('Opened cache')
+        return cache.addAll(urlsToCache)
+      })
+  )
+})
+
+// Fetch event - serve from cache if available
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request)
+      .then((response) => {
+        // Return cached version or fetch from network
+        return response || fetch(event.request)
+      })
+  )
+})
+
+// Activate event - clean up old caches
+self.addEventListener('activate', (event) => {
+  console.log('Service Worker activating...')
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('Deleting old cache:', cacheName)
+            return caches.delete(cacheName)
+          }
+        })
+      )
+    })
+  )
+})
+
+// Handle app visibility changes
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+})
+
+// PWA specific events for background detection
+self.addEventListener('fetch', (event) => {
+  // Check if the app is going to background
+  if (event.request.mode === 'navigate') {
+    // Notify main script about potential backgrounding
+    self.clients.matchAll().then((clients) => {
+      clients.forEach((client) => {
+        client.postMessage({
+          type: 'APP_BACKGROUND',
+          timestamp: Date.now()
+        })
+      })
+    })
+  }
+})
