@@ -165,13 +165,13 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                 </div>
               </div>
             ) : (
-              <button
-                onClick={() => setShowKakaoLogin(true)}
-                className="w-full bg-yellow-400 text-black py-3 px-4 rounded-lg font-semibold hover:bg-yellow-500 transition-colors flex items-center justify-center"
-              >
-                <span className="text-lg mr-2">💬</span>
-                카카오로 로그인
-              </button>
+                             <button
+                 onClick={() => setShowKakaoLogin(true)}
+                 className="w-full bg-yellow-400 text-black py-3 px-4 rounded-lg font-semibold hover:bg-yellow-500 transition-colors flex items-center justify-center"
+               >
+                 <span className="text-lg mr-2">💬</span>
+                 카카오로 로그인
+               </button>
             )}
           </div>
         </div>

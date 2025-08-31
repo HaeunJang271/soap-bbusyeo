@@ -71,13 +71,13 @@ const KakaoLogin = ({ onClose }: KakaoLoginProps) => {
                 카카오 계정으로 로그인하여 게임 데이터를 저장하고<br />
                 다른 기기에서도 계속 플레이할 수 있습니다.
               </p>
-              <button
-                onClick={handleKakaoLogin}
-                className="w-full bg-yellow-400 text-black py-3 px-6 rounded-2xl font-semibold hover:bg-yellow-500 transition-colors flex items-center justify-center"
-              >
-                <span className="text-xl mr-2">💬</span>
-                카카오로 로그인
-              </button>
+                             <button
+                 onClick={handleKakaoLogin}
+                 className="w-full bg-yellow-400 text-black py-3 px-6 rounded-2xl font-semibold hover:bg-yellow-500 transition-colors flex items-center justify-center"
+               >
+                 <span className="text-xl mr-2">💬</span>
+                 카카오로 로그인
+               </button>
             </div>
           )}
           

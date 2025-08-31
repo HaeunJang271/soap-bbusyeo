@@ -62,13 +62,13 @@ const WelcomeLogin = ({ onClose }: WelcomeLoginProps) => {
 
           {/* 버튼들 */}
           <div className="space-y-3">
-            <button
-              onClick={handleLoginClick}
-              className="w-full bg-yellow-400 text-black py-4 px-6 rounded-2xl font-bold text-lg hover:bg-yellow-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center"
-            >
-              <span className="text-2xl mr-3">💬</span>
-              카카오로 로그인하기
-            </button>
+                         <button
+               onClick={handleLoginClick}
+               className="w-full bg-yellow-400 text-black py-4 px-6 rounded-2xl font-bold text-lg hover:bg-yellow-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center"
+             >
+               <span className="text-2xl mr-3">💬</span>
+               카카오로 로그인하기
+             </button>
             
             <button
               onClick={handleSkip}
