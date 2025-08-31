@@ -111,25 +111,32 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
 
   // Auto-play background music when entering game screen and start game timer
   useEffect(() => {
-    const { backgroundMusicEnabled } = useGameStore.getState()
-    if (backgroundMusicEnabled) {
-      audioManager.playBackgroundMusic()
+    // 모바일에서 안정적인 초기화를 위해 약간의 지연
+    const initGame = () => {
+      const { backgroundMusicEnabled } = useGameStore.getState()
+      if (backgroundMusicEnabled) {
+        audioManager.playBackgroundMusic()
+      }
+      
+      // Start game timer
+      const startTime = Date.now()
+      setGameStartTime(startTime)
+      console.log('Game started at:', startTime)
     }
     
-    // Start game timer
-    const startTime = Date.now()
-    setGameStartTime(startTime)
-    console.log('Game started at:', startTime)
+    // 모바일에서 즉시 실행하면 문제가 될 수 있으므로 약간의 지연
+    const timer = setTimeout(initGame, 50)
     
     // Cleanup function to add play time when component unmounts
     return () => {
-      const playTime = Math.floor((Date.now() - startTime) / 1000)
+      clearTimeout(timer)
+      const playTime = Math.floor((Date.now() - (gameStartTime || Date.now())) / 1000)
       console.log('Game ended, play time:', playTime, 'seconds')
       if (playTime > 0) {
         addPlayTime(playTime)
       }
     }
-  }, [addPlayTime]) // gameStartTime 제거 (무한 루프 방지)
+  }, [addPlayTime, gameStartTime])
 
   // Canvas setup
   useEffect(() => {
@@ -141,21 +148,46 @@ const FoamRitual: React.FC<FoamRitualProps> = ({ onHaptic }) => {
     const foamCtx = foamCanvas.getContext('2d')
     if (!ctx || !foamCtx) return
 
-    // Set canvas size
+    // Set canvas size with mobile-friendly approach
     const resizeCanvas = () => {
+      // 모바일에서 getBoundingClientRect가 0을 반환할 수 있으므로 fallback 사용
       const rect = canvas.getBoundingClientRect()
-      canvas.width = rect.width * window.devicePixelRatio
-      canvas.height = rect.height * window.devicePixelRatio
-      foamCanvas.width = rect.width * window.devicePixelRatio
-      foamCanvas.height = rect.height * window.devicePixelRatio
+      const width = rect.width || window.innerWidth
+      const height = rect.height || window.innerHeight
       
+      // 최소 크기 보장
+      const finalWidth = Math.max(width, 100)
+      const finalHeight = Math.max(height, 100)
+      
+      canvas.width = finalWidth * window.devicePixelRatio
+      canvas.height = finalHeight * window.devicePixelRatio
+      foamCanvas.width = finalWidth * window.devicePixelRatio
+      foamCanvas.height = finalHeight * window.devicePixelRatio
+      
+      // 컨텍스트 초기화
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
       foamCtx.scale(window.devicePixelRatio, window.devicePixelRatio)
+      
+      // 배경 초기화 (투명하게)
+      ctx.clearRect(0, 0, finalWidth, finalHeight)
+      foamCtx.clearRect(0, 0, finalWidth, finalHeight)
     }
 
+    // 초기 설정
     resizeCanvas()
-    window.addEventListener('resize', resizeCanvas)
-    return () => window.removeEventListener('resize', resizeCanvas)
+    
+    // 모바일에서 orientation change나 resize 이벤트 처리
+    const handleResize = () => {
+      setTimeout(resizeCanvas, 100) // 약간의 지연으로 안정성 확보
+    }
+    
+    window.addEventListener('resize', handleResize)
+    window.addEventListener('orientationchange', handleResize)
+    
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('orientationchange', handleResize)
+    }
   }, [])
 
 
