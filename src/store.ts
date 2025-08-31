@@ -560,6 +560,11 @@ export const useGameStore = create<GameState & {
         // 카카오 로그인 관련 액션들
         loginWithKakao: async () => {
           try {
+            // 브라우저 환경 확인
+            if (typeof window === 'undefined') {
+              return { success: false, error: 'Browser environment required' }
+            }
+
             if (!window.Kakao) {
               alert('카카오 SDK가 로드되지 않았습니다. 페이지를 새로고침해주세요.')
               return { success: false, error: 'Kakao SDK not loaded' }
@@ -571,16 +576,18 @@ export const useGameStore = create<GameState & {
               return { success: false, error: 'Kakao SDK not initialized' }
             }
 
-            // 팝업 차단 확인
-            const popupTest = window.open('', '_blank', 'width=1,height=1')
-            if (!popupTest) {
-              alert('팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.')
-              return { success: false, error: 'Popup blocked' }
+            // 팝업 차단 확인 (브라우저 환경에서만)
+            if (typeof window !== 'undefined') {
+              const popupTest = window.open('', '_blank', 'width=1,height=1')
+              if (!popupTest) {
+                alert('팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.')
+                return { success: false, error: 'Popup blocked' }
+              }
+              popupTest.close()
             }
-            popupTest.close()
 
             // 카카오 로그인 요청
-            const authResult = await new Promise<any>((resolve, reject) => {
+            await new Promise<any>((resolve, reject) => {
               const loginWindow = (window.Kakao as any).Auth.login({
                 success: (authObj: any) => {
                   resolve(authObj)
@@ -597,8 +604,8 @@ export const useGameStore = create<GameState & {
                 }
               })
               
-              // 팝업이 차단되었는지 확인
-              if (!loginWindow || loginWindow.closed) {
+              // 팝업이 차단되었는지 확인 (브라우저 환경에서만)
+              if (typeof window !== 'undefined' && (!loginWindow || loginWindow.closed)) {
                 setTimeout(() => {
                   if (!loginWindow || loginWindow.closed) {
                     alert('로그인 팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.')
@@ -625,13 +632,13 @@ export const useGameStore = create<GameState & {
             // 상태 업데이트 - 기존 닉네임 유지 및 백업 데이터 복원
             set(() => {
               // localStorage에서 저장된 사용자 프로필 확인 (별도 키로 저장)
-              let existingNickname = localStorage.getItem('user-nickname')
+              let existingNickname = typeof window !== 'undefined' ? localStorage.getItem('user-nickname') : null
               
               console.log('🔧 localStorage user-nickname:', existingNickname)
               
               if (!existingNickname) {
                 // 기존 방식으로도 확인
-                const savedData = localStorage.getItem('soap-game-storage')
+                const savedData = typeof window !== 'undefined' ? localStorage.getItem('soap-game-storage') : null
                 console.log('🔧 localStorage savedData:', savedData)
                 
                 if (savedData) {
@@ -663,7 +670,7 @@ export const useGameStore = create<GameState & {
               // 백업 데이터 복원 시도
               const userId = userInfo.id.toString()
               const backupKey = `user-backup-${userId}`
-              const backupData = localStorage.getItem(backupKey)
+              const backupData = typeof window !== 'undefined' ? localStorage.getItem(backupKey) : null
               
               if (backupData) {
                 try {
@@ -738,7 +745,7 @@ export const useGameStore = create<GameState & {
           }
           
           // 백업 데이터를 사용자별로 저장
-          if (currentState.userProfile?.id) {
+          if (currentState.userProfile?.id && typeof window !== 'undefined') {
             localStorage.setItem(`user-backup-${currentState.userProfile.id}`, JSON.stringify(backupData))
             console.log('🔧 User data backed up for user:', currentState.userProfile.id)
           }
@@ -777,7 +784,7 @@ export const useGameStore = create<GameState & {
         },
 
         checkKakaoLoginStatus: () => {
-          if (!window.Kakao) {
+          if (typeof window === 'undefined' || !window.Kakao) {
             return false
           }
           return (window.Kakao as any).Auth.getAccessToken() !== null
@@ -794,19 +801,21 @@ export const useGameStore = create<GameState & {
             console.log('🔧 Updated userProfile:', updatedProfile)
             
             // localStorage에 즉시 저장 (별도 키로도 저장)
-            localStorage.setItem('user-nickname', newNickname)
-            console.log('🔧 Saved nickname to user-nickname key:', newNickname)
-            
-            const currentData = localStorage.getItem('soap-game-storage')
-            if (currentData) {
-              try {
-                const parsedData = JSON.parse(currentData)
-                parsedData.state = parsedData.state || {}
-                parsedData.state.userProfile = updatedProfile
-                localStorage.setItem('soap-game-storage', JSON.stringify(parsedData))
-                console.log('🔧 Saved to localStorage immediately')
-              } catch (error) {
-                console.error('Failed to save to localStorage:', error)
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('user-nickname', newNickname)
+              console.log('🔧 Saved nickname to user-nickname key:', newNickname)
+              
+              const currentData = localStorage.getItem('soap-game-storage')
+              if (currentData) {
+                try {
+                  const parsedData = JSON.parse(currentData)
+                  parsedData.state = parsedData.state || {}
+                  parsedData.state.userProfile = updatedProfile
+                  localStorage.setItem('soap-game-storage', JSON.stringify(parsedData))
+                  console.log('🔧 Saved to localStorage immediately')
+                } catch (error) {
+                  console.error('Failed to save to localStorage:', error)
+                }
               }
             }
             
