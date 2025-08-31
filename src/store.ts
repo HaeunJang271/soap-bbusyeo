@@ -565,6 +565,7 @@ export const useGameStore = create<GameState & {
             // 카카오 SDK 초기화 상태 확인
             console.log('Kakao.isInitialized:', (window.Kakao as any).isInitialized())
             
+            // 카카오 로그인 요청
             const response = await new Promise<any>((resolve, reject) => {
               (window.Kakao as any).Auth.login({
                 success: (authObj: any) => {
@@ -573,6 +574,7 @@ export const useGameStore = create<GameState & {
                 },
                 fail: (err: any) => {
                   console.error('Kakao login failed:', err)
+                  console.error('Error details:', JSON.stringify(err, null, 2))
                   reject(err)
                 }
               })
