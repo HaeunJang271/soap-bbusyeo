@@ -561,25 +561,51 @@ export const useGameStore = create<GameState & {
         loginWithKakao: async () => {
           try {
             if (!window.Kakao) {
+              alert('카카오 SDK가 로드되지 않았습니다. 페이지를 새로고침해주세요.')
               return { success: false, error: 'Kakao SDK not loaded' }
             }
 
             // 카카오 SDK 초기화 확인
             if (!(window.Kakao as any).isInitialized()) {
+              alert('카카오 SDK가 초기화되지 않았습니다. 페이지를 새로고침해주세요.')
               return { success: false, error: 'Kakao SDK not initialized' }
             }
 
+            // 팝업 차단 확인
+            const popupTest = window.open('', '_blank', 'width=1,height=1')
+            if (!popupTest) {
+              alert('팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.')
+              return { success: false, error: 'Popup blocked' }
+            }
+            popupTest.close()
+
             // 카카오 로그인 요청
-            await new Promise<any>((resolve, reject) => {
-              (window.Kakao as any).Auth.login({
+            const authResult = await new Promise<any>((resolve, reject) => {
+              const loginWindow = (window.Kakao as any).Auth.login({
                 success: (authObj: any) => {
                   resolve(authObj)
                 },
                 fail: (err: any) => {
                   console.error('Kakao Auth login failed:', err)
+                  // 팝업 차단 오류인지 확인
+                  if (err.error === 'popup_closed_by_user' || err.error === 'popup_blocked') {
+                    alert('로그인 팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.')
+                  } else {
+                    alert('로그인에 실패했습니다. 다시 시도해주세요.')
+                  }
                   reject(err)
                 }
               })
+              
+              // 팝업이 차단되었는지 확인
+              if (!loginWindow || loginWindow.closed) {
+                setTimeout(() => {
+                  if (!loginWindow || loginWindow.closed) {
+                    alert('로그인 팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.')
+                    reject(new Error('Popup blocked'))
+                  }
+                }, 1000)
+              }
             })
 
             // 사용자 정보 가져오기
